@@ -1,5 +1,9 @@
 # 🌾 ZimFarmLink
 
+![Work in Progress](https://img.shields.io/badge/status-in--development-yellow)
+![Flutter](https://img.shields.io/badge/built%20with-Flutter-blue)
+> ⚠️ **Note:** This project is currently under active development. Some features may be incomplete or subject to change.
+
 **ZimFarmLink** is a mobile application built with **Flutter** to empower Zimbabwean farmers and agribusinesses. It connects producers, buyers, and experts through a smart agricultural platform that works both **online and offline**.
 
 ---
