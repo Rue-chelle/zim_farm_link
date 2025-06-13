@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class MarketplaceScreen extends StatelessWidget {
-  const MarketplaceScreen({super.key});
+class AssistantScreen extends StatelessWidget {
+  const AssistantScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
