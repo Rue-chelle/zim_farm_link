@@ -1,28 +1,38 @@
 import 'package:flutter/material.dart';
-import 'routes/app_routes.dart';
 
-void main() {
-  runApp(const ZimFarmLinkApp());
-}
-
-class ZimFarmLinkApp extends StatelessWidget {
-  const ZimFarmLinkApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ZimFarmLink',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        fontFamily: 'Roboto',
-        scaffoldBackgroundColor: Colors.grey[100],
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
+final ThemeData appTheme = ThemeData(
+  primaryColor: const Color(0xFF4CAF50), // green for farming/eco feel
+  accentColor: const Color(0xFF81C784),
+  scaffoldBackgroundColor: Colors.white,
+  fontFamily: 'Montserrat', // or another clean font
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Color(0xFF4CAF50),
+    elevation: 2,
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+    ),
+    iconTheme: IconThemeData(color: Colors.white),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: const Color(0xFF4CAF50), width: 2),
+    ),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF4CAF50),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      initialRoute: '/',
-      routes: appRoutes,
-    );
-  }
-}
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    ),
+  ),
+);
