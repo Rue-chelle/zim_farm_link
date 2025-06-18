@@ -1,88 +1,121 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import '../marketplace/marketplace_screen.dart';
-import '../assistant/assistant_screen.dart';
-import '../community/community_screen.dart';
-import '../profile/profile_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-// ...existing code...
-
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _screens = [
-    const MarketplaceScreen(),
-    const AssistantScreen(),
-    const CommunityScreen(),
-    const ProfileScreen(),
-  ];
-
-  void _onTabTapped(int index) {
-    setState(() => _selectedIndex = index);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-
-      // ✅ Modern App Bar with Logo and App Name
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        toolbarHeight: 70,
-        titleSpacing: 16,
-        title: Row(
+        title: Text(
+          'ZimFarmLink',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.green.shade700,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
           children: [
-            Image.asset('assets/logo.png', height: 40),
-            const SizedBox(width: 10),
-            Text(
-              'ZimFarmLink',
-              style: TextStyle(
-                color: Colors.green[800],
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
+            // Logo and tagline
+            Column(
+              children: [
+                Hero(
+                  tag: 'logo',
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    height: 100,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Smart Farming, Real Solutions",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+
+            // Navigation Buttons
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                children: [
+                  _buildCard(
+                    icon: Icons.storefront,
+                    label: 'Marketplace',
+                    onTap: () => Navigator.pushNamed(context, '/marketplace'),
+                  ),
+                  _buildCard(
+                    icon: Icons.camera_alt,
+                    label: 'AI Assistant',
+                    onTap: () => Navigator.pushNamed(context, '/ai-assistant'),
+                  ),
+                  _buildCard(
+                    icon: Icons.info,
+                    label: 'Farming Tips',
+                    onTap: () => Navigator.pushNamed(context, '/tips'),
+                  ),
+                  _buildCard(
+                    icon: Icons.person,
+                    label: 'Profile',
+                    onTap: () => Navigator.pushNamed(context, '/profile'),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
 
-      // ✅ Current Screen View
-      body: _screens[_selectedIndex],
-
-      // ✅ Add Listing Button (Only on Marketplace Tab)
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.pushNamed(context, '/addListing');
-              },
-              label: const Text("Add Listing"),
-              icon: const Icon(Icons.add),
-              backgroundColor: Colors.green[700],
-            )
-          : null,
-
-      // ✅ Bottom Navigation
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onTabTapped,
-        selectedItemColor: Colors.green[800],
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Market'),
-          BottomNavigationBarItem(icon: Icon(Icons.agriculture), label: 'AI'),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Community'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+  Widget _buildCard({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              offset: Offset(2, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 40, color: Colors.green.shade700),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
