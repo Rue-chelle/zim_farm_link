@@ -1,17 +1,69 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../models/listing_model.dart';
+import '../../../db/database_helper.dart';
+import 'edit_listing_screen.dart';
 
 class ListingDetailScreen extends StatelessWidget {
   final Listing listing;
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  const ListingDetailScreen({Key? key, required this.listing})
-      : super(key: key);
+  ListingDetailScreen({Key? key, required this.listing}) : super(key: key);
+
+  void _deleteListing(BuildContext context) async {
+    await _dbHelper.deleteListing(listing.id!);
+    Navigator.pop(context, true);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(listing.title)),
+      appBar: AppBar(
+        title: Text(listing.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final updated = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditListingScreen(listing: listing),
+                ),
+              );
+              if (updated == true) {
+                Navigator.pop(context, true);
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Delete Listing?'),
+                  content: const Text(
+                      'Are you sure you want to delete this listing?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        _deleteListing(context);
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Delete',
+                          style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

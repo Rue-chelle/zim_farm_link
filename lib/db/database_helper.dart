@@ -72,3 +72,18 @@ class DatabaseHelper {
     );
   }
 }
+
+Future<int> updateListing(Listing listing) async {
+  final db = await database;
+  return await db.update(
+    'listings',
+    listing.toMap(),
+    where: 'id = ?',
+    whereArgs: [listing.id],
+  );
+}
+
+Future<int> deleteListing(int id) async {
+  final db = await database;
+  return await db.delete('listings', where: 'id = ?', whereArgs: [id]);
+}
