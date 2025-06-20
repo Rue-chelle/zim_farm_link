@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import '../../db/database_helper.dart';
 import '../../models/listing_model.dart';
@@ -62,8 +61,9 @@ class _AddListingScreenState extends State<AddListingScreen> {
                 onSaved: (val) => price = double.tryParse(val ?? '0') ?? 0,
                 validator: (val) {
                   if (val == null || val.isEmpty) return 'Please enter price';
-                  if (double.tryParse(val) == null)
+                  if (double.tryParse(val) == null) {
                     return 'Enter a valid number';
+                  }
                   return null;
                 },
               ),

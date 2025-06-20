@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/listing_model.dart';
 import '../../db/database_helper.dart';
-import '../listing/listing_detail_screen.dart';
+import 'listing_detail_screen.dart';
 import '../../widgets/rounded_card.dart';
 
 class MarketplaceScreen extends StatefulWidget {

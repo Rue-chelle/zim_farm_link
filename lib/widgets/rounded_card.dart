@@ -4,8 +4,7 @@ class RoundedCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? margin;
 
-  const RoundedCard({Key? key, required this.child, this.margin})
-      : super(key: key);
+  const RoundedCard({super.key, required this.child, this.margin});
 
   @override
   Widget build(BuildContext context) {

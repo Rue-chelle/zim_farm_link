@@ -9,7 +9,7 @@ import '../../../db/database_helper.dart';
 class EditListingScreen extends StatefulWidget {
   final Listing listing;
 
-  const EditListingScreen({Key? key, required this.listing}) : super(key: key);
+  const EditListingScreen({super.key, required this.listing});
 
   @override
   _EditListingScreenState createState() => _EditListingScreenState();

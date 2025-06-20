@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'views/home_screen.dart';
-import 'screens/marketplace_screen.dart';
-import 'screens/add_listing_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/ai_assistant_screen.dart';
+import 'views/home/home_screen.dart';
+import 'views/marketplace/marketplace_screen.dart';
+import 'views/marketplace/add_listing_screen.dart';
+import 'views/profile/profile_screen.dart';
+import 'views/assistant/assistant_screen.dart';
 import 'widgets/custom_navbar.dart';
 
 void main() {
@@ -24,7 +24,7 @@ class _ZimFarmLinkAppState extends State<ZimFarmLinkApp> {
     HomeScreen(),
     MarketplaceScreen(),
     AddListingScreen(),
-    AiAssistantScreen(),
+    AssistantScreen(),
     ProfileScreen(),
   ];
 
