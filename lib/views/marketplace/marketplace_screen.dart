@@ -1,8 +1,6 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import '../../models/listing_model.dart';
-import '../../db/database_helper.dart';
+import '../../db/local_db.dart';
 import 'listing_detail_screen.dart';
 import '../../widgets/rounded_card.dart';
 
@@ -15,7 +13,7 @@ class MarketplaceScreen extends StatefulWidget {
 
 class _MarketplaceScreenState extends State<MarketplaceScreen>
     with SingleTickerProviderStateMixin {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final LocalDatabase _dbHelper = LocalDatabase();
 
   List<Listing> _allListings = [];
   List<Listing> _filteredListings = [];

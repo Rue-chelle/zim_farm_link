@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // TODO: Replace with real login logic
       Future.delayed(const Duration(seconds: 2), () {
         setState(() => _isLoading = false);
         Navigator.pushReplacementNamed(context, '/home');

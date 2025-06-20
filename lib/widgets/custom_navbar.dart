@@ -16,7 +16,8 @@ class CustomNavBar extends StatelessWidget {
       currentIndex: selectedIndex,
       selectedItemColor: Colors.green.shade700,
       unselectedItemColor: Colors.grey,
-      backgroundColor: Theme.of(context).bottomAppBarColor,
+      // ignore: deprecated_member_use
+      backgroundColor: Theme.of(context).colorScheme.background,
       type: BottomNavigationBarType.fixed,
       onTap: onItemTapped,
       items: const [

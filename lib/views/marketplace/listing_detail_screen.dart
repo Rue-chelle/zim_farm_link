@@ -1,17 +1,19 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../../models/listing_model.dart';
-import '../../../db/database_helper.dart';
 import 'edit_listing _screen.dart';
+import '../../db/local_db.dart';
 
 class ListingDetailScreen extends StatelessWidget {
   final Listing listing;
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final LocalDatabase _dbHelper = LocalDatabase();
 
   ListingDetailScreen({super.key, required this.listing});
 
   void _deleteListing(BuildContext context) async {
-    await _dbHelper.deleteListing(listing.id!);
+    await _dbHelper.deleteListing(listing.id);
+
     Navigator.pop(context, true);
   }
 

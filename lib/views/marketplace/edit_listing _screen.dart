@@ -1,10 +1,11 @@
+// ignore_for_file: file_names, use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import '../../../models/listing_model.dart';
-import '../../../db/database_helper.dart';
+import '../../db/local_db.dart';
 
 class EditListingScreen extends StatefulWidget {
   final Listing listing;
@@ -12,12 +13,13 @@ class EditListingScreen extends StatefulWidget {
   const EditListingScreen({super.key, required this.listing});
 
   @override
+  // ignore: library_private_types_in_public_api
   _EditListingScreenState createState() => _EditListingScreenState();
 }
 
 class _EditListingScreenState extends State<EditListingScreen> {
   final _formKey = GlobalKey<FormState>();
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final LocalDatabase _dbHelper = LocalDatabase();
 
   late String title;
   late String description;
@@ -69,6 +71,8 @@ class _EditListingScreenState extends State<EditListingScreen> {
         location: location,
         category: category,
         contact: contact,
+        delivery: widget.listing.delivery,
+        createdAt: widget.listing.createdAt,
       );
 
       await _dbHelper.updateListing(updatedListing);

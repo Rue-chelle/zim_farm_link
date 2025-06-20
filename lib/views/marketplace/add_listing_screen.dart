@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../db/database_helper.dart';
-import '../../models/listing_model.dart';
-import '../../widgets/primary_button.dart';
+import 'package:image_picker/image_picker.dart';
+// import 'package:google_fonts/google_fonts.dart';
+import 'package:drift/drift.dart' hide Column;
+import '../../db/local_db.dart';
 
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});
@@ -13,104 +16,209 @@ class AddListingScreen extends StatefulWidget {
 
 class _AddListingScreenState extends State<AddListingScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _dbHelper = DatabaseHelper();
+  final db = LocalDatabase();
 
-  String title = '';
-  String description = '';
-  double price = 0;
-  String location = '';
-  String category = 'Fruits';
-  String imagePath = '';
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _contactController = TextEditingController();
 
-  final List<String> categories = [
-    'Fruits',
-    'Vegetables',
-    'Livestock',
-    'Tools'
+  String? _category;
+  String? _region;
+  bool _delivery = false;
+  File? _image;
+
+  final List<String> categories = ['Crops', 'Livestock', 'Seeds', 'Tools'];
+  final List<String> regions = [
+    'Harare',
+    'Bulawayo',
+    'Manicaland',
+    'Masvingo',
+    'Midlands',
+    'Mashonaland East',
+    'Mashonaland West',
+    'Matabeleland North',
+    'Matabeleland South'
   ];
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _image = File(picked.path);
+      });
+    }
+  }
+
+  void _submit() async {
+    if (_formKey.currentState!.validate() && _image != null) {
+      final entry = ListingsCompanion(
+        title: Value(_titleController.text),
+        description: Value(_descriptionController.text),
+        category: Value(_category!),
+        price: Value(double.parse(_priceController.text)),
+        location: Value(_region!),
+        delivery: Value(_delivery),
+        imagePath: Value(_image!.path),
+        contact: Value(_contactController.text),
+      );
+
+      await db.insertListing(entry);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Listing saved successfully!')),
+      );
+
+      _formKey.currentState!.reset();
+      setState(() {
+        _image = null;
+        _delivery = false;
+        _category = null;
+        _region = null;
+      });
+
+      _titleController.clear();
+      _descriptionController.clear();
+      _priceController.clear();
+      _contactController.clear();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all fields.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Listing')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: const Text('Add Listing'),
+        backgroundColor: Colors.green.shade700,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: [
+              // Image picker
+              GestureDetector(
+                onTap: _pickImage,
+                child: _image == null
+                    ? Container(
+                        height: 160,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey[200],
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.add_a_photo, size: 40),
+                        ),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child:
+                            Image.file(_image!, height: 160, fit: BoxFit.cover),
+                      ),
+              ),
+              const SizedBox(height: 20),
+
+              // Title
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Title'),
-                onSaved: (val) => title = val ?? '',
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Product Name',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (val) =>
-                    val == null || val.isEmpty ? 'Please enter a title' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
-                onSaved: (val) => description = val ?? '',
-                validator: (val) => val == null || val.isEmpty
-                    ? 'Please enter description'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-                onSaved: (val) => price = double.tryParse(val ?? '0') ?? 0,
-                validator: (val) {
-                  if (val == null || val.isEmpty) return 'Please enter price';
-                  if (double.tryParse(val) == null) {
-                    return 'Enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Location'),
-                onSaved: (val) => location = val ?? '',
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Please enter location' : null,
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Category'),
-                value: category,
-                items: categories
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: (val) {
-                  setState(() {
-                    category = val ?? 'Fruits';
-                  });
-                },
+                    val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-              PrimaryButton(
-                text: 'Save Listing',
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
 
-                    // TODO: Add image picking functionality here
+              // Description
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
 
-                    final newListing = Listing(
-                      id: 0,
-                      title: title,
-                      description: description,
-                      price: price,
-                      location: location,
-                      category: category,
-                      imagePath: imagePath,
-                    );
+              // Price
+              TextFormField(
+                controller: _priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Price (USD)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
 
-                    await _dbHelper.insertListing(newListing);
-                    if (mounted) Navigator.pop(context, true);
-                  }
-                },
-              )
+              // Category dropdown
+              DropdownButtonFormField<String>(
+                value: _category,
+                hint: const Text('Select Category'),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                items: categories.map((cat) {
+                  return DropdownMenuItem(value: cat, child: Text(cat));
+                }).toList(),
+                onChanged: (val) => setState(() => _category = val),
+                validator: (val) => val == null ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Region dropdown
+              DropdownButtonFormField<String>(
+                value: _region,
+                hint: const Text('Select Region'),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                items: regions.map((r) {
+                  return DropdownMenuItem(value: r, child: Text(r));
+                }).toList(),
+                onChanged: (val) => setState(() => _region = val),
+                validator: (val) => val == null ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Contact Info
+              TextFormField(
+                controller: _contactController,
+                decoration: const InputDecoration(
+                  labelText: 'Contact Info (e.g. WhatsApp number)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Delivery toggle
+              SwitchListTile(
+                value: _delivery,
+                onChanged: (val) => setState(() => _delivery = val),
+                title: const Text('Delivery Available?'),
+              ),
+
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                icon: const Icon(Icons.check),
+                onPressed: _submit,
+                label: const Text('Submit Listing'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.green.shade700,
+                ),
+              ),
             ],
           ),
         ),
