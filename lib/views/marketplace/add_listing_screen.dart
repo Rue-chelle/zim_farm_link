@@ -1,11 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'package:image_picker/image_picker.dart'; // ❌ Disabled for web temporarily
 // import 'package:google_fonts/google_fonts.dart';
-import 'package:drift/drift.dart' hide Column;
 import '../../db/local_db.dart';
+import 'package:drift/drift.dart' hide Column;
 
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});
@@ -41,29 +40,62 @@ class _AddListingScreenState extends State<AddListingScreen> {
     'Matabeleland South'
   ];
 
+  // TEMPORARILY DISABLED FOR WEB
+  /*
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
+      if (!mounted) return;
       setState(() {
         _image = File(picked.path);
       });
     }
   }
+  */
+
+  void _pickImage() async {
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Image picking not supported on web.')),
+      );
+      return;
+    }
+
+    // Native image picker - re-enable when testing on device
+    /*
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      if (!mounted) return;
+      setState(() {
+        _image = File(picked.path);
+      });
+    }
+    */
+  }
 
   void _submit() async {
-    if (_formKey.currentState!.validate() && _image != null) {
+    if (_formKey.currentState!.validate()) {
+      if (_image == null && !kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select an image.')),
+        );
+        return;
+      }
+
       final entry = ListingsCompanion(
         title: Value(_titleController.text),
         description: Value(_descriptionController.text),
-        category: Value(_category!),
-        price: Value(double.parse(_priceController.text)),
-        location: Value(_region!),
+        category: Value(_category ?? ''),
+        price: Value(double.tryParse(_priceController.text) ?? 0),
+        location: Value(_region ?? ''),
         delivery: Value(_delivery),
-        imagePath: Value(_image!.path),
+        imagePath: Value(_image?.path ?? 'no_image'), // Placeholder for web
         contact: Value(_contactController.text),
       );
 
       await db.insertListing(entry);
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Listing saved successfully!')),
@@ -81,11 +113,16 @@ class _AddListingScreenState extends State<AddListingScreen> {
       _descriptionController.clear();
       _priceController.clear();
       _contactController.clear();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields.')),
-      );
     }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _contactController.dispose();
+    super.dispose();
   }
 
   @override
@@ -101,7 +138,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Image picker
               GestureDetector(
                 onTap: _pickImage,
                 child: _image == null
@@ -117,15 +153,28 @@ class _AddListingScreenState extends State<AddListingScreen> {
                           child: Icon(Icons.add_a_photo, size: 40),
                         ),
                       )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child:
-                            Image.file(_image!, height: 160, fit: BoxFit.cover),
-                      ),
+                    : kIsWeb
+                        ? Container(
+                            height: 160,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.grey[200],
+                            ),
+                            child: const Center(
+                              child: Text('Image preview not available on web'),
+                            ),
+                          )
+                        : ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              _image!,
+                              height: 160,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
               ),
               const SizedBox(height: 20),
-
-              // Title
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
@@ -136,8 +185,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-
-              // Description
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
@@ -149,8 +196,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-
-              // Price
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
@@ -162,8 +207,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-
-              // Category dropdown
               DropdownButtonFormField<String>(
                 value: _category,
                 hint: const Text('Select Category'),
@@ -175,8 +218,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
                 validator: (val) => val == null ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-
-              // Region dropdown
               DropdownButtonFormField<String>(
                 value: _region,
                 hint: const Text('Select Region'),
@@ -188,8 +229,6 @@ class _AddListingScreenState extends State<AddListingScreen> {
                 validator: (val) => val == null ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-
-              // Contact Info
               TextFormField(
                 controller: _contactController,
                 decoration: const InputDecoration(
@@ -200,16 +239,12 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     val == null || val.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 16),
-
-              // Delivery toggle
               SwitchListTile(
                 value: _delivery,
                 onChanged: (val) => setState(() => _delivery = val),
                 title: const Text('Delivery Available?'),
               ),
-
               const SizedBox(height: 24),
-
               ElevatedButton.icon(
                 icon: const Icon(Icons.check),
                 onPressed: _submit,

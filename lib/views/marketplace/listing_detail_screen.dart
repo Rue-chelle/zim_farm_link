@@ -7,12 +7,15 @@ import '../../db/local_db.dart';
 
 class ListingDetailScreen extends StatelessWidget {
   final Listing listing;
+  final VoidCallback onDelete;
   final LocalDatabase _dbHelper = LocalDatabase();
 
-  ListingDetailScreen({super.key, required this.listing});
+  ListingDetailScreen(
+      {super.key, required this.listing, required this.onDelete});
 
   void _deleteListing(BuildContext context) async {
     await _dbHelper.deleteListing(listing.id);
+    onDelete();
 
     Navigator.pop(context, true);
   }

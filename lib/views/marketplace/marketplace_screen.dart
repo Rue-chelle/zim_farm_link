@@ -1,8 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../db/local_db.dart';
-import 'listing_detail_screen.dart';
-import '../../widgets/rounded_card.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
+import 'package:zimfarmlink/db/local_db.dart';
+// import 'package:zimfarmlink/db/listing_model.dart';
+import 'package:zimfarmlink/views/marketplace/listing_detail_screen.dart';
+import 'package:zimfarmlink/views/marketplace/edit_listing _screen.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -11,119 +14,44 @@ class MarketplaceScreen extends StatefulWidget {
   State<MarketplaceScreen> createState() => _MarketplaceScreenState();
 }
 
-class _MarketplaceScreenState extends State<MarketplaceScreen>
-    with SingleTickerProviderStateMixin {
-  final LocalDatabase _dbHelper = LocalDatabase();
-
-  List<Listing> _allListings = [];
-  List<Listing> _filteredListings = [];
-
-  String _searchQuery = '';
-  String _selectedCategory = 'All';
-
-  final List<String> _categories = [
-    'All',
-    'Fruits',
-    'Vegetables',
-    'Livestock',
-    'Tools'
-  ];
-
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+class _MarketplaceScreenState extends State<MarketplaceScreen> {
+  final db = LocalDatabase();
+  List<Listing> _listings = [];
 
   @override
   void initState() {
     super.initState();
     _loadListings();
+  }
 
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
+  Future<void> _loadListings() async {
+    final data = await db.getAllListings();
+    setState(() => _listings = data);
+  }
+
+  void _deleteListing(int id) async {
+    await db.deleteListing(id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Listing deleted.')),
     );
-    _fadeAnimation =
-        CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
-
-    _animationController.forward();
+    _loadListings();
   }
 
-  void _loadListings() async {
-    final listings = await _dbHelper.getAllListings();
-    setState(() {
-      _allListings = listings;
-      _applyFilters();
-    });
+  void _refreshAfterDelete() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Listing deleted.')),
+    );
+    _loadListings();
   }
 
-  void _applyFilters() {
-    List<Listing> results = _allListings;
-
-    if (_selectedCategory != 'All') {
-      results = results
-          .where((listing) => listing.category == _selectedCategory)
-          .toList();
-    }
-    if (_searchQuery.isNotEmpty) {
-      results = results
-          .where((listing) =>
-              listing.title
-                  .toLowerCase()
-                  .contains(_searchQuery.toLowerCase()) ||
-              listing.description
-                  .toLowerCase()
-                  .contains(_searchQuery.toLowerCase()))
-          .toList();
-    }
-
-    setState(() {
-      _filteredListings = results;
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildListingTile(Listing listing) {
-    return RoundedCard(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: listing.imagePath.isNotEmpty
-              ? Image.file(
-                  File(listing.imagePath),
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                )
-              : Image.asset(
-                  'assets/images/placeholder.png',
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                ),
-        ),
-        title: Text(
-          listing.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle:
-            Text('\$${listing.price.toStringAsFixed(2)} - ${listing.location}'),
-        onTap: () async {
-          final refresh = await Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => ListingDetailScreen(listing: listing)),
-          );
-          if (refresh == true) {
-            _loadListings();
-          }
-        },
+  void _editListing(Listing listing) async {
+    final updated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditListingScreen(listing: listing),
       ),
     );
+    if (updated == true) _loadListings();
   }
 
   @override
@@ -131,67 +59,117 @@ class _MarketplaceScreenState extends State<MarketplaceScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Marketplace'),
+        backgroundColor: Colors.green.shade700,
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search listings...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                onChanged: (value) {
-                  _searchQuery = value;
-                  _applyFilters();
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                value: _selectedCategory,
-                items: _categories
-                    .map(
-                        (cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                    .toList(),
-                onChanged: (value) {
-                  _selectedCategory = value!;
-                  _applyFilters();
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: _filteredListings.isEmpty
-                  ? const Center(child: Text('No listings found'))
-                  : ListView.builder(
-                      itemCount: _filteredListings.length,
-                      itemBuilder: (context, index) {
-                        return _buildListingTile(_filteredListings[index]);
-                      },
+      body: _listings.isEmpty
+          ? const Center(child: Text('No listings yet.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _listings.length,
+              itemBuilder: (context, index) {
+                final listing = _listings[index];
+                return GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ListingDetailScreen(
+                          listing: listing,
+                          onDelete: _refreshAfterDelete,
+                        ),
+                      ),
+                    );
+                    if (result == true) _loadListings();
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade300,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: kIsWeb
+                              ? Container(
+                                  color: Colors.grey[300],
+                                  height: 80,
+                                  width: 80,
+                                  child: const Center(
+                                    child: Text('No image'),
+                                  ),
+                                )
+                              : Image.file(
+                                  File(listing.imagePath),
+                                  height: 80,
+                                  width: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                listing.title,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                listing.category,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '\$${listing.price.toStringAsFixed(2)}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  color: Colors.green[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  TextButton(
+                                    onPressed: () => _editListing(listing),
+                                    child: const Text('Edit'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => _deleteListing(listing.id),
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/addListing').then((value) {
-            if (value == true) _loadListings();
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
