@@ -55,7 +55,7 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/profile.png
+    - assets/images/profile.jpg
     - assets/icons/
 
   fonts:
