@@ -1,91 +1,100 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../db/local_db.dart';
+import 'edit_profile_modal.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final LocalDatabase db = LocalDatabase();
+  UserProfile? _profile;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final profiles = await db.getUserProfiles();
+    setState(() {
+      _profile = profiles.isNotEmpty ? profiles.first : null;
+      _loading = false;
+    });
+  }
+
+  Future<void> _editProfile() async {
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (_) => EditProfileModal(db: db, existingProfile: _profile),
+    );
+    if (updated == true) {
+      _loadProfile();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_profile == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile')),
+        body: Center(
+          child: ElevatedButton(
+            onPressed: _editProfile,
+            child: const Text('Create Profile'),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: Colors.green.shade700,
+        title: const Text('Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: _editProfile,
+          )
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Avatar
             CircleAvatar(
-              radius: 50,
-              backgroundImage: const AssetImage('assets/images/profile.png'),
-              backgroundColor: Colors.grey[200],
-              child: Icon(Icons.person, size: 50, color: Colors.grey[400]),
+              radius: 60,
+              backgroundImage: _profile!.profileImage != null
+                  ? FileImage(File(_profile!.profileImage!))
+                  : null,
+              child: _profile!.profileImage == null
+                  ? const Icon(Icons.person, size: 60)
+                  : null,
             ),
-            const SizedBox(height: 16),
-
-            // Name
+            const SizedBox(height: 20),
             Text(
-              'Michelle Samuriwo',
-              style: GoogleFonts.poppins(
-                  fontSize: 20, fontWeight: FontWeight.bold),
+              _profile!.fullName,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              'Smart Farmer',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Info List
-            _buildProfileTile(Icons.location_on, 'Region', 'Mashonaland East'),
-            _buildProfileTile(Icons.phone, 'Contact', '+263 77 123 4567'),
-            _buildProfileTile(Icons.email, 'Email', 'michelle@example.com'),
-
-            const SizedBox(height: 24),
-
-            // Buttons
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.edit),
-                label: const Text('Edit Profile'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                onPressed: () {
-                  // Navigate to Edit Profile screen (to be added later)
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.logout),
-                label: const Text('Logout'),
-                onPressed: () {
-                  // Handle logout logic
-                },
-              ),
-            ),
+            const SizedBox(height: 10),
+            Text('Phone: ${_profile!.phoneNumber}'),
+            Text('Email: ${_profile!.email ?? "Not set"}'),
+            Text('Location: ${_profile!.location}'),
+            Text('Farming Type: ${_profile!.farmingType}'),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildProfileTile(IconData icon, String label, String value) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 4),
-      leading: Icon(icon, color: Colors.green.shade700),
-      title:
-          Text(label, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
-      subtitle: Text(value, style: GoogleFonts.poppins()),
     );
   }
 }
