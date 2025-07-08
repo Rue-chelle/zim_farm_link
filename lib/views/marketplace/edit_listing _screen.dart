@@ -27,6 +27,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
   late String category;
   late String contact;
   late double price;
+  // late DateTime createdAt;
   File? imageFile;
 
   final picker = ImagePicker();
@@ -72,7 +73,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
         category: category,
         contact: contact,
         delivery: widget.listing.delivery,
-        createdAt: widget.listing.createdAt,
+        // sss
       );
 
       await _dbHelper.updateListing(updatedListing);

@@ -67,14 +67,6 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("delivery" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -85,8 +77,7 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
         location,
         category,
         contact,
-        delivery,
-        createdAt
+        delivery
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -149,10 +140,6 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
       context.handle(_deliveryMeta,
           delivery.isAcceptableOrUnknown(data['delivery']!, _deliveryMeta));
     }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
     return context;
   }
 
@@ -180,8 +167,6 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
           .read(DriftSqlType.string, data['${effectivePrefix}contact'])!,
       delivery: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}delivery'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
   }
 
@@ -201,7 +186,6 @@ class Listing extends DataClass implements Insertable<Listing> {
   final String category;
   final String contact;
   final bool delivery;
-  final DateTime createdAt;
   const Listing(
       {required this.id,
       required this.title,
@@ -211,8 +195,7 @@ class Listing extends DataClass implements Insertable<Listing> {
       required this.location,
       required this.category,
       required this.contact,
-      required this.delivery,
-      required this.createdAt});
+      required this.delivery});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -225,7 +208,6 @@ class Listing extends DataClass implements Insertable<Listing> {
     map['category'] = Variable<String>(category);
     map['contact'] = Variable<String>(contact);
     map['delivery'] = Variable<bool>(delivery);
-    map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
@@ -240,7 +222,6 @@ class Listing extends DataClass implements Insertable<Listing> {
       category: Value(category),
       contact: Value(contact),
       delivery: Value(delivery),
-      createdAt: Value(createdAt),
     );
   }
 
@@ -257,7 +238,6 @@ class Listing extends DataClass implements Insertable<Listing> {
       category: serializer.fromJson<String>(json['category']),
       contact: serializer.fromJson<String>(json['contact']),
       delivery: serializer.fromJson<bool>(json['delivery']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
   @override
@@ -273,7 +253,6 @@ class Listing extends DataClass implements Insertable<Listing> {
       'category': serializer.toJson<String>(category),
       'contact': serializer.toJson<String>(contact),
       'delivery': serializer.toJson<bool>(delivery),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
@@ -286,8 +265,7 @@ class Listing extends DataClass implements Insertable<Listing> {
           String? location,
           String? category,
           String? contact,
-          bool? delivery,
-          DateTime? createdAt}) =>
+          bool? delivery}) =>
       Listing(
         id: id ?? this.id,
         title: title ?? this.title,
@@ -298,7 +276,6 @@ class Listing extends DataClass implements Insertable<Listing> {
         category: category ?? this.category,
         contact: contact ?? this.contact,
         delivery: delivery ?? this.delivery,
-        createdAt: createdAt ?? this.createdAt,
       );
   Listing copyWithCompanion(ListingsCompanion data) {
     return Listing(
@@ -312,7 +289,6 @@ class Listing extends DataClass implements Insertable<Listing> {
       category: data.category.present ? data.category.value : this.category,
       contact: data.contact.present ? data.contact.value : this.contact,
       delivery: data.delivery.present ? data.delivery.value : this.delivery,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
 
@@ -327,15 +303,14 @@ class Listing extends DataClass implements Insertable<Listing> {
           ..write('location: $location, ')
           ..write('category: $category, ')
           ..write('contact: $contact, ')
-          ..write('delivery: $delivery, ')
-          ..write('createdAt: $createdAt')
+          ..write('delivery: $delivery')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, title, description, imagePath, price,
-      location, category, contact, delivery, createdAt);
+      location, category, contact, delivery);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -348,8 +323,7 @@ class Listing extends DataClass implements Insertable<Listing> {
           other.location == this.location &&
           other.category == this.category &&
           other.contact == this.contact &&
-          other.delivery == this.delivery &&
-          other.createdAt == this.createdAt);
+          other.delivery == this.delivery);
 }
 
 class ListingsCompanion extends UpdateCompanion<Listing> {
@@ -362,7 +336,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
   final Value<String> category;
   final Value<String> contact;
   final Value<bool> delivery;
-  final Value<DateTime> createdAt;
   const ListingsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -373,7 +346,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     this.category = const Value.absent(),
     this.contact = const Value.absent(),
     this.delivery = const Value.absent(),
-    this.createdAt = const Value.absent(),
   });
   ListingsCompanion.insert({
     this.id = const Value.absent(),
@@ -385,7 +357,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     required String category,
     required String contact,
     this.delivery = const Value.absent(),
-    this.createdAt = const Value.absent(),
   })  : title = Value(title),
         description = Value(description),
         imagePath = Value(imagePath),
@@ -403,7 +374,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     Expression<String>? category,
     Expression<String>? contact,
     Expression<bool>? delivery,
-    Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -415,7 +385,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
       if (category != null) 'category': category,
       if (contact != null) 'contact': contact,
       if (delivery != null) 'delivery': delivery,
-      if (createdAt != null) 'created_at': createdAt,
     });
   }
 
@@ -428,8 +397,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
       Value<String>? location,
       Value<String>? category,
       Value<String>? contact,
-      Value<bool>? delivery,
-      Value<DateTime>? createdAt}) {
+      Value<bool>? delivery}) {
     return ListingsCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
@@ -440,7 +408,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
       category: category ?? this.category,
       contact: contact ?? this.contact,
       delivery: delivery ?? this.delivery,
-      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -474,9 +441,6 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     if (delivery.present) {
       map['delivery'] = Variable<bool>(delivery.value);
     }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
     return map;
   }
 
@@ -491,8 +455,349 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
           ..write('location: $location, ')
           ..write('category: $category, ')
           ..write('contact: $contact, ')
-          ..write('delivery: $delivery, ')
-          ..write('createdAt: $createdAt')
+          ..write('delivery: $delivery')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserProfilesTable extends UserProfiles
+    with TableInfo<$UserProfilesTable, UserProfile> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _fullNameMeta =
+      const VerificationMeta('fullName');
+  @override
+  late final GeneratedColumn<String> fullName = GeneratedColumn<String>(
+      'full_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+      'email', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
+  @override
+  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
+      'phone', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _locationMeta =
+      const VerificationMeta('location');
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+      'location', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _profileImagePathMeta =
+      const VerificationMeta('profileImagePath');
+  @override
+  late final GeneratedColumn<String> profileImagePath = GeneratedColumn<String>(
+      'profile_image_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, fullName, email, phone, location, profileImagePath];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_profiles';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserProfile> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('full_name')) {
+      context.handle(_fullNameMeta,
+          fullName.isAcceptableOrUnknown(data['full_name']!, _fullNameMeta));
+    } else if (isInserting) {
+      context.missing(_fullNameMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('phone')) {
+      context.handle(
+          _phoneMeta, phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta));
+    } else if (isInserting) {
+      context.missing(_phoneMeta);
+    }
+    if (data.containsKey('location')) {
+      context.handle(_locationMeta,
+          location.isAcceptableOrUnknown(data['location']!, _locationMeta));
+    } else if (isInserting) {
+      context.missing(_locationMeta);
+    }
+    if (data.containsKey('profile_image_path')) {
+      context.handle(
+          _profileImagePathMeta,
+          profileImagePath.isAcceptableOrUnknown(
+              data['profile_image_path']!, _profileImagePathMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProfile map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProfile(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      fullName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}full_name'])!,
+      email: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}email'])!,
+      phone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phone'])!,
+      location: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}location'])!,
+      profileImagePath: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}profile_image_path']),
+    );
+  }
+
+  @override
+  $UserProfilesTable createAlias(String alias) {
+    return $UserProfilesTable(attachedDatabase, alias);
+  }
+}
+
+class UserProfile extends DataClass implements Insertable<UserProfile> {
+  final int id;
+  final String fullName;
+  final String email;
+  final String phone;
+  final String location;
+  final String? profileImagePath;
+  const UserProfile(
+      {required this.id,
+      required this.fullName,
+      required this.email,
+      required this.phone,
+      required this.location,
+      this.profileImagePath});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['full_name'] = Variable<String>(fullName);
+    map['email'] = Variable<String>(email);
+    map['phone'] = Variable<String>(phone);
+    map['location'] = Variable<String>(location);
+    if (!nullToAbsent || profileImagePath != null) {
+      map['profile_image_path'] = Variable<String>(profileImagePath);
+    }
+    return map;
+  }
+
+  UserProfilesCompanion toCompanion(bool nullToAbsent) {
+    return UserProfilesCompanion(
+      id: Value(id),
+      fullName: Value(fullName),
+      email: Value(email),
+      phone: Value(phone),
+      location: Value(location),
+      profileImagePath: profileImagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileImagePath),
+    );
+  }
+
+  factory UserProfile.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProfile(
+      id: serializer.fromJson<int>(json['id']),
+      fullName: serializer.fromJson<String>(json['fullName']),
+      email: serializer.fromJson<String>(json['email']),
+      phone: serializer.fromJson<String>(json['phone']),
+      location: serializer.fromJson<String>(json['location']),
+      profileImagePath: serializer.fromJson<String?>(json['profileImagePath']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'fullName': serializer.toJson<String>(fullName),
+      'email': serializer.toJson<String>(email),
+      'phone': serializer.toJson<String>(phone),
+      'location': serializer.toJson<String>(location),
+      'profileImagePath': serializer.toJson<String?>(profileImagePath),
+    };
+  }
+
+  UserProfile copyWith(
+          {int? id,
+          String? fullName,
+          String? email,
+          String? phone,
+          String? location,
+          Value<String?> profileImagePath = const Value.absent()}) =>
+      UserProfile(
+        id: id ?? this.id,
+        fullName: fullName ?? this.fullName,
+        email: email ?? this.email,
+        phone: phone ?? this.phone,
+        location: location ?? this.location,
+        profileImagePath: profileImagePath.present
+            ? profileImagePath.value
+            : this.profileImagePath,
+      );
+  UserProfile copyWithCompanion(UserProfilesCompanion data) {
+    return UserProfile(
+      id: data.id.present ? data.id.value : this.id,
+      fullName: data.fullName.present ? data.fullName.value : this.fullName,
+      email: data.email.present ? data.email.value : this.email,
+      phone: data.phone.present ? data.phone.value : this.phone,
+      location: data.location.present ? data.location.value : this.location,
+      profileImagePath: data.profileImagePath.present
+          ? data.profileImagePath.value
+          : this.profileImagePath,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfile(')
+          ..write('id: $id, ')
+          ..write('fullName: $fullName, ')
+          ..write('email: $email, ')
+          ..write('phone: $phone, ')
+          ..write('location: $location, ')
+          ..write('profileImagePath: $profileImagePath')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, fullName, email, phone, location, profileImagePath);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProfile &&
+          other.id == this.id &&
+          other.fullName == this.fullName &&
+          other.email == this.email &&
+          other.phone == this.phone &&
+          other.location == this.location &&
+          other.profileImagePath == this.profileImagePath);
+}
+
+class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
+  final Value<int> id;
+  final Value<String> fullName;
+  final Value<String> email;
+  final Value<String> phone;
+  final Value<String> location;
+  final Value<String?> profileImagePath;
+  const UserProfilesCompanion({
+    this.id = const Value.absent(),
+    this.fullName = const Value.absent(),
+    this.email = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.location = const Value.absent(),
+    this.profileImagePath = const Value.absent(),
+  });
+  UserProfilesCompanion.insert({
+    this.id = const Value.absent(),
+    required String fullName,
+    required String email,
+    required String phone,
+    required String location,
+    this.profileImagePath = const Value.absent(),
+  })  : fullName = Value(fullName),
+        email = Value(email),
+        phone = Value(phone),
+        location = Value(location);
+  static Insertable<UserProfile> custom({
+    Expression<int>? id,
+    Expression<String>? fullName,
+    Expression<String>? email,
+    Expression<String>? phone,
+    Expression<String>? location,
+    Expression<String>? profileImagePath,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (fullName != null) 'full_name': fullName,
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
+      if (location != null) 'location': location,
+      if (profileImagePath != null) 'profile_image_path': profileImagePath,
+    });
+  }
+
+  UserProfilesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? fullName,
+      Value<String>? email,
+      Value<String>? phone,
+      Value<String>? location,
+      Value<String?>? profileImagePath}) {
+    return UserProfilesCompanion(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      location: location ?? this.location,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (fullName.present) {
+      map['full_name'] = Variable<String>(fullName.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (phone.present) {
+      map['phone'] = Variable<String>(phone.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (profileImagePath.present) {
+      map['profile_image_path'] = Variable<String>(profileImagePath.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfilesCompanion(')
+          ..write('id: $id, ')
+          ..write('fullName: $fullName, ')
+          ..write('email: $email, ')
+          ..write('phone: $phone, ')
+          ..write('location: $location, ')
+          ..write('profileImagePath: $profileImagePath')
           ..write(')'))
         .toString();
   }
@@ -502,11 +807,12 @@ abstract class _$LocalDatabase extends GeneratedDatabase {
   _$LocalDatabase(QueryExecutor e) : super(e);
   $LocalDatabaseManager get managers => $LocalDatabaseManager(this);
   late final $ListingsTable listings = $ListingsTable(this);
+  late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [listings];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [listings, userProfiles];
 }
 
 typedef $$ListingsTableCreateCompanionBuilder = ListingsCompanion Function({
@@ -519,7 +825,6 @@ typedef $$ListingsTableCreateCompanionBuilder = ListingsCompanion Function({
   required String category,
   required String contact,
   Value<bool> delivery,
-  Value<DateTime> createdAt,
 });
 typedef $$ListingsTableUpdateCompanionBuilder = ListingsCompanion Function({
   Value<int> id,
@@ -531,7 +836,6 @@ typedef $$ListingsTableUpdateCompanionBuilder = ListingsCompanion Function({
   Value<String> category,
   Value<String> contact,
   Value<bool> delivery,
-  Value<DateTime> createdAt,
 });
 
 class $$ListingsTableFilterComposer
@@ -569,9 +873,6 @@ class $$ListingsTableFilterComposer
 
   ColumnFilters<bool> get delivery => $composableBuilder(
       column: $table.delivery, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
 }
 
 class $$ListingsTableOrderingComposer
@@ -609,9 +910,6 @@ class $$ListingsTableOrderingComposer
 
   ColumnOrderings<bool> get delivery => $composableBuilder(
       column: $table.delivery, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ListingsTableAnnotationComposer
@@ -649,9 +947,6 @@ class $$ListingsTableAnnotationComposer
 
   GeneratedColumn<bool> get delivery =>
       $composableBuilder(column: $table.delivery, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
 class $$ListingsTableTableManager extends RootTableManager<
@@ -686,7 +981,6 @@ class $$ListingsTableTableManager extends RootTableManager<
             Value<String> category = const Value.absent(),
             Value<String> contact = const Value.absent(),
             Value<bool> delivery = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
           }) =>
               ListingsCompanion(
             id: id,
@@ -698,7 +992,6 @@ class $$ListingsTableTableManager extends RootTableManager<
             category: category,
             contact: contact,
             delivery: delivery,
-            createdAt: createdAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -710,7 +1003,6 @@ class $$ListingsTableTableManager extends RootTableManager<
             required String category,
             required String contact,
             Value<bool> delivery = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
           }) =>
               ListingsCompanion.insert(
             id: id,
@@ -722,7 +1014,6 @@ class $$ListingsTableTableManager extends RootTableManager<
             category: category,
             contact: contact,
             delivery: delivery,
-            createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -743,10 +1034,196 @@ typedef $$ListingsTableProcessedTableManager = ProcessedTableManager<
     (Listing, BaseReferences<_$LocalDatabase, $ListingsTable, Listing>),
     Listing,
     PrefetchHooks Function()>;
+typedef $$UserProfilesTableCreateCompanionBuilder = UserProfilesCompanion
+    Function({
+  Value<int> id,
+  required String fullName,
+  required String email,
+  required String phone,
+  required String location,
+  Value<String?> profileImagePath,
+});
+typedef $$UserProfilesTableUpdateCompanionBuilder = UserProfilesCompanion
+    Function({
+  Value<int> id,
+  Value<String> fullName,
+  Value<String> email,
+  Value<String> phone,
+  Value<String> location,
+  Value<String?> profileImagePath,
+});
+
+class $$UserProfilesTableFilterComposer
+    extends Composer<_$LocalDatabase, $UserProfilesTable> {
+  $$UserProfilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fullName => $composableBuilder(
+      column: $table.fullName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get phone => $composableBuilder(
+      column: $table.phone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get profileImagePath => $composableBuilder(
+      column: $table.profileImagePath,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$UserProfilesTableOrderingComposer
+    extends Composer<_$LocalDatabase, $UserProfilesTable> {
+  $$UserProfilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fullName => $composableBuilder(
+      column: $table.fullName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get phone => $composableBuilder(
+      column: $table.phone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get profileImagePath => $composableBuilder(
+      column: $table.profileImagePath,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$UserProfilesTableAnnotationComposer
+    extends Composer<_$LocalDatabase, $UserProfilesTable> {
+  $$UserProfilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get fullName =>
+      $composableBuilder(column: $table.fullName, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get phone =>
+      $composableBuilder(column: $table.phone, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get profileImagePath => $composableBuilder(
+      column: $table.profileImagePath, builder: (column) => column);
+}
+
+class $$UserProfilesTableTableManager extends RootTableManager<
+    _$LocalDatabase,
+    $UserProfilesTable,
+    UserProfile,
+    $$UserProfilesTableFilterComposer,
+    $$UserProfilesTableOrderingComposer,
+    $$UserProfilesTableAnnotationComposer,
+    $$UserProfilesTableCreateCompanionBuilder,
+    $$UserProfilesTableUpdateCompanionBuilder,
+    (
+      UserProfile,
+      BaseReferences<_$LocalDatabase, $UserProfilesTable, UserProfile>
+    ),
+    UserProfile,
+    PrefetchHooks Function()> {
+  $$UserProfilesTableTableManager(_$LocalDatabase db, $UserProfilesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserProfilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserProfilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserProfilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> fullName = const Value.absent(),
+            Value<String> email = const Value.absent(),
+            Value<String> phone = const Value.absent(),
+            Value<String> location = const Value.absent(),
+            Value<String?> profileImagePath = const Value.absent(),
+          }) =>
+              UserProfilesCompanion(
+            id: id,
+            fullName: fullName,
+            email: email,
+            phone: phone,
+            location: location,
+            profileImagePath: profileImagePath,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String fullName,
+            required String email,
+            required String phone,
+            required String location,
+            Value<String?> profileImagePath = const Value.absent(),
+          }) =>
+              UserProfilesCompanion.insert(
+            id: id,
+            fullName: fullName,
+            email: email,
+            phone: phone,
+            location: location,
+            profileImagePath: profileImagePath,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$UserProfilesTableProcessedTableManager = ProcessedTableManager<
+    _$LocalDatabase,
+    $UserProfilesTable,
+    UserProfile,
+    $$UserProfilesTableFilterComposer,
+    $$UserProfilesTableOrderingComposer,
+    $$UserProfilesTableAnnotationComposer,
+    $$UserProfilesTableCreateCompanionBuilder,
+    $$UserProfilesTableUpdateCompanionBuilder,
+    (
+      UserProfile,
+      BaseReferences<_$LocalDatabase, $UserProfilesTable, UserProfile>
+    ),
+    UserProfile,
+    PrefetchHooks Function()>;
 
 class $LocalDatabaseManager {
   final _$LocalDatabase _db;
   $LocalDatabaseManager(this._db);
   $$ListingsTableTableManager get listings =>
       $$ListingsTableTableManager(_db, _db.listings);
+  $$UserProfilesTableTableManager get userProfiles =>
+      $$UserProfilesTableTableManager(_db, _db.userProfiles);
 }
