@@ -1,11 +1,14 @@
-import 'dart:io';
+import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
+import 'package:drift/drift.dart' as drift;
+import 'package:drift/native.dart'; // still required for desktop if needed
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'dart:io';
+
 part 'local_db.g.dart';
 
-// === Listings Table ===
+// === Listings Table ===s
 class Listings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text()();
@@ -50,21 +53,27 @@ class LocalDatabase extends _$LocalDatabase {
   @override
   int get schemaVersion => 1;
 
-  // Listings
+  // === Listings ===
   Future<int> insertListing(ListingsCompanion entry) =>
       into(listings).insert(entry);
+
   Future<List<Listing>> getAllListings() => select(listings).get();
+
   Future<void> deleteListing(int id) =>
       (delete(listings)..where((tbl) => tbl.id.equals(id))).go();
+
   Future<bool> updateListing(Listing listing) =>
       update(listings).replace(listing);
 
-  // User Profiles
+  // === User Profiles ===
   Future<int> insertUserProfile(UserProfilesCompanion profile) =>
       into(userProfiles).insert(profile);
+
   Future<List<UserProfile>> getUserProfiles() => select(userProfiles).get();
+
   Future<void> deleteProfile(int id) =>
       (delete(userProfiles)..where((tbl) => tbl.id.equals(id))).go();
+
   Future<void> updateUserProfile(UserProfile profile) async {
     await (update(userProfiles)..where((tbl) => tbl.id.equals(profile.id)))
         .write(
@@ -79,19 +88,21 @@ class LocalDatabase extends _$LocalDatabase {
     );
   }
 
-  // Donations
+  // === Donations ===
   Future<int> insertDonation(DonationsCompanion entry) =>
       into(donations).insert(entry);
+
   Future<List<Donation>> getAllDonations() => select(donations).get();
+
   Future<void> deleteDonation(int id) =>
       (delete(donations)..where((tbl) => tbl.id.equals(id))).go();
 }
 
-// === Lazy Database Setup ===
+// === Drift SQLite Web/Mobile Setup ===
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(dir.path, 'zimfarmlink.db');
-    return NativeDatabase(File(dbPath));
+    final path = p.join(dir.path, 'zimfarmlink.db');
+    return NativeDatabase(File(path));
   });
 }
