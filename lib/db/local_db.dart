@@ -1,14 +1,15 @@
-import 'package:sqflite/sqflite.dart' as sqflite;
+import 'dart:io' show File;
 import 'package:drift/drift.dart';
-import 'package:drift/drift.dart' as drift;
-import 'package:drift/native.dart'; // still required for desktop if needed
+import 'package:drift/native.dart';
+// ignore: deprecated_member_use
+import 'package:drift/web.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'dart:io';
 
 part 'local_db.g.dart';
 
-// === Listings Table ===s
+// === Listings Table ===
 class Listings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text()();
@@ -45,7 +46,6 @@ class Donations extends Table {
   DateTimeColumn get dateAdded => dateTime().withDefault(currentDateAndTime)();
 }
 
-// === Database Class ===
 @DriftDatabase(tables: [Listings, UserProfiles, Donations])
 class LocalDatabase extends _$LocalDatabase {
   LocalDatabase() : super(_openConnection());
@@ -98,11 +98,15 @@ class LocalDatabase extends _$LocalDatabase {
       (delete(donations)..where((tbl) => tbl.id.equals(id))).go();
 }
 
-// === Drift SQLite Web/Mobile Setup ===
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final path = p.join(dir.path, 'zimfarmlink.db');
-    return NativeDatabase(File(path));
-  });
+// === Lazy Database Setup for Web & Mobile ===
+QueryExecutor _openConnection() {
+  if (kIsWeb) {
+    return WebDatabase('zimfarmlink_web_db');
+  } else {
+    return LazyDatabase(() async {
+      final dir = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dir.path, 'zimfarmlink.db');
+      return NativeDatabase(File(dbPath));
+    });
+  }
 }

@@ -1,14 +1,13 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:drift/drift.dart' show Value;
-import '../../db/local_db.dart';
+import 'package:zimfarmlink/db/local_db.dart';
 
 class EditProfileModal extends StatefulWidget {
-  final LocalDatabase db;
-  final UserProfile? existingProfile;
+  final UserProfile userProfile;
 
-  const EditProfileModal({super.key, required this.db, this.existingProfile});
+  const EditProfileModal({super.key, required this.userProfile});
 
   @override
   State<EditProfileModal> createState() => _EditProfileModalState();
@@ -16,143 +15,141 @@ class EditProfileModal extends StatefulWidget {
 
 class _EditProfileModalState extends State<EditProfileModal> {
   final _formKey = GlobalKey<FormState>();
-
-  late TextEditingController _nameController;
-  late TextEditingController _phoneController;
+  late TextEditingController _fullNameController;
+  late TextEditingController _farmingTypeController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   late TextEditingController _locationController;
-  String? _farmingType;
-  File? _profileImage;
+  String? _profileImagePath;
 
-  final List<String> farmingTypes = ['Crops', 'Livestock', 'Both'];
+  final LocalDatabase db = LocalDatabase();
 
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.existingProfile?.fullName ?? '');
-    _phoneController =
-        TextEditingController(text: widget.existingProfile?.phoneNumber ?? '');
-    _emailController =
-        TextEditingController(text: widget.existingProfile?.email ?? '');
-    _locationController =
-        TextEditingController(text: widget.existingProfile?.location ?? '');
-    _farmingType = widget.existingProfile?.farmingType;
-    if (widget.existingProfile?.profileImage != null) {
-      _profileImage = File(widget.existingProfile!.profileImage!);
-    }
+    _fullNameController = TextEditingController(text: widget.userProfile.fullName);
+    _farmingTypeController = TextEditingController(text: widget.userProfile.farmingType);
+    _emailController = TextEditingController(text: widget.userProfile.email ?? '');
+    _phoneController = TextEditingController(text: widget.userProfile.phoneNumber ?? '');
+    _locationController = TextEditingController(text: widget.userProfile.location ?? '');
+    _profileImagePath = widget.userProfile.profileImage;
   }
 
-  Future<void> _pickProfileImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _farmingTypeController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() {
-        _profileImage = File(picked.path);
+        _profileImagePath = picked.path;
       });
     }
   }
 
   Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      final companion = UserProfilesCompanion(
-        fullName: Value(_nameController.text),
-        phoneNumber: Value(_phoneController.text),
-        email:
-            Value(_emailController.text.isEmpty ? null : _emailController.text),
-        location: Value(_locationController.text),
-        farmingType: Value(_farmingType!),
-        profileImage: Value(_profileImage?.path),
-      );
+    if (!_formKey.currentState!.validate()) return;
 
-      if (widget.existingProfile == null) {
-        await widget.db.insertUserProfile(companion);
-      } else {
-        final updatedProfile = UserProfile(
-          id: widget.existingProfile!.id,
-          fullName: _nameController.text,
-          phoneNumber: _phoneController.text,
-          email: _emailController.text.isEmpty ? null : _emailController.text,
-          location: _locationController.text,
-          farmingType: _farmingType!,
-          profileImage: _profileImage?.path,
-        );
-        await widget.db.updateUserProfile(updatedProfile);
-      }
+    final updatedProfile = UserProfile(
+      id: widget.userProfile.id,
+      fullName: _fullNameController.text,
+      farmingType: _farmingTypeController.text,
+      email: _emailController.text,
+      phoneNumber: _phoneController.text,
+      location: _locationController.text,
+      profileImage: _profileImagePath ?? '',
+    );
 
-      Navigator.pop(context, true);
-    }
+    await db.updateUserProfile(updatedProfile);
+
+    Navigator.of(context).pop(true);
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit Profile'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap: _pickProfileImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage:
-                      _profileImage != null ? FileImage(_profileImage!) : null,
-                  child: _profileImage == null
-                      ? const Icon(Icons.person, size: 50)
-                      : null,
-                ),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Text('Edit Profile', style: Theme.of(context).textTheme.headline6),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _pickImage,
+              child: CircleAvatar(
+                radius: 45,
+                backgroundImage:
+                    (_profileImagePath != null && _profileImagePath!.isNotEmpty)
+                        ? FileImage(File(_profileImagePath!))
+                        : null,
+                child: (_profileImagePath == null || _profileImagePath!.isEmpty)
+                    ? const Icon(Icons.camera_alt, size: 45)
+                    : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Full Name'),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: 12),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Please enter your full name' : null,
+                  ),
+                  TextFormField(
+                    controller: _farmingTypeController,
+                    decoration: const InputDecoration(labelText: 'Farming Type'),
+                    validator: (val) =>
+                        val == null || val.isEmpty ? 'Please enter your farming type' : null,
+                  ),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return null;
+                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      if (!emailRegex.hasMatch(val)) return 'Enter a valid email';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone Number'),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(labelText: 'Location'),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _saveProfile,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
+                    child: const Text('Save Changes'),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-                keyboardType: TextInputType.phone,
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _emailController,
-                decoration:
-                    const InputDecoration(labelText: 'Email (Optional)'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Location'),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _farmingType,
-                decoration: const InputDecoration(labelText: 'Farming Type'),
-                items: farmingTypes
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (val) => setState(() => _farmingType = val),
-                validator: (val) => val == null ? 'Required' : null,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel')),
-        ElevatedButton(onPressed: _saveProfile, child: const Text('Save')),
-      ],
     );
   }
 }
