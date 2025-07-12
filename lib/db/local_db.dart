@@ -1,8 +1,8 @@
-import 'dart:io' show File;
+import 'dart:io' show File; // okay to use with kIsWeb checks
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 // ignore: deprecated_member_use
-import 'package:drift/web.dart';
+import 'package:drift/web.dart'; // ✅ correct for web
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -20,9 +20,11 @@ class Listings extends Table {
   BoolColumn get delivery => boolean().withDefault(const Constant(false))();
   TextColumn get imagePath => text()();
   TextColumn get contact => text()();
+  TextColumn get deliveryStatus =>
+      text().withDefault(const Constant('Pending'))();
 }
 
-// === User Profile Table ===
+// === User Profiles Table ===
 class UserProfiles extends Table {
   TextColumn get role =>
       text().withDefault(const Constant('user'))(); // user | ngo | admin
@@ -67,6 +69,11 @@ class LocalDatabase extends _$LocalDatabase {
   Future<bool> updateListing(Listing listing) =>
       update(listings).replace(listing);
 
+  Future<void> updateDeliveryStatus(int listingId, String newStatus) async {
+    await (update(listings)..where((tbl) => tbl.id.equals(listingId)))
+        .write(ListingsCompanion(deliveryStatus: Value(newStatus)));
+  }
+
   // === User Profiles ===
   Future<int> insertUserProfile(UserProfilesCompanion profile) =>
       into(userProfiles).insert(profile);
@@ -90,7 +97,6 @@ class LocalDatabase extends _$LocalDatabase {
     );
   }
 
-  // Get the first user (simulate current user for now)
   Future<UserProfile?> getCurrentUser() async {
     final users = await select(userProfiles).get();
     return users.isNotEmpty ? users.first : null;

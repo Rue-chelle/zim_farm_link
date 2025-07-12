@@ -27,7 +27,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
   late String category;
   late String contact;
   late double price;
-  // late DateTime createdAt;
+  late bool _delivery; // ✅ Added
   File? imageFile;
 
   final picker = ImagePicker();
@@ -42,6 +42,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
     category = l.category;
     contact = l.contact;
     price = l.price;
+    _delivery = l.delivery; // ✅ Initialize delivery
     imageFile = File(l.imagePath);
   }
 
@@ -72,8 +73,8 @@ class _EditListingScreenState extends State<EditListingScreen> {
         location: location,
         category: category,
         contact: contact,
-        delivery: widget.listing.delivery,
-        // sss
+        deliveryStatus: widget.listing.deliveryStatus,
+        delivery: _delivery, // ✅ Save delivery toggle
       );
 
       await _dbHelper.updateListing(updatedListing);
@@ -143,6 +144,19 @@ class _EditListingScreenState extends State<EditListingScreen> {
                 decoration: const InputDecoration(labelText: 'Contact Info'),
                 onSaved: (value) => contact = value ?? '',
               ),
+              const SizedBox(height: 16),
+
+              // ✅ Delivery switch
+              SwitchListTile(
+                title: const Text('Delivery Available'),
+                value: _delivery,
+                onChanged: (val) {
+                  setState(() {
+                    _delivery = val;
+                  });
+                },
+              ),
+
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: saveListing,

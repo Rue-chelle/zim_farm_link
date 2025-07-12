@@ -67,6 +67,14 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
   late final GeneratedColumn<String> contact = GeneratedColumn<String>(
       'contact', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _deliveryStatusMeta =
+      const VerificationMeta('deliveryStatus');
+  @override
+  late final GeneratedColumn<String> deliveryStatus = GeneratedColumn<String>(
+      'delivery_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pending'));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -77,7 +85,8 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
         location,
         delivery,
         imagePath,
-        contact
+        contact,
+        deliveryStatus
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -140,6 +149,12 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
     } else if (isInserting) {
       context.missing(_contactMeta);
     }
+    if (data.containsKey('delivery_status')) {
+      context.handle(
+          _deliveryStatusMeta,
+          deliveryStatus.isAcceptableOrUnknown(
+              data['delivery_status']!, _deliveryStatusMeta));
+    }
     return context;
   }
 
@@ -167,6 +182,8 @@ class $ListingsTable extends Listings with TableInfo<$ListingsTable, Listing> {
           .read(DriftSqlType.string, data['${effectivePrefix}image_path'])!,
       contact: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}contact'])!,
+      deliveryStatus: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}delivery_status'])!,
     );
   }
 
@@ -186,6 +203,7 @@ class Listing extends DataClass implements Insertable<Listing> {
   final bool delivery;
   final String imagePath;
   final String contact;
+  final String deliveryStatus;
   const Listing(
       {required this.id,
       required this.title,
@@ -195,7 +213,8 @@ class Listing extends DataClass implements Insertable<Listing> {
       required this.location,
       required this.delivery,
       required this.imagePath,
-      required this.contact});
+      required this.contact,
+      required this.deliveryStatus});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -208,6 +227,7 @@ class Listing extends DataClass implements Insertable<Listing> {
     map['delivery'] = Variable<bool>(delivery);
     map['image_path'] = Variable<String>(imagePath);
     map['contact'] = Variable<String>(contact);
+    map['delivery_status'] = Variable<String>(deliveryStatus);
     return map;
   }
 
@@ -222,6 +242,7 @@ class Listing extends DataClass implements Insertable<Listing> {
       delivery: Value(delivery),
       imagePath: Value(imagePath),
       contact: Value(contact),
+      deliveryStatus: Value(deliveryStatus),
     );
   }
 
@@ -238,6 +259,7 @@ class Listing extends DataClass implements Insertable<Listing> {
       delivery: serializer.fromJson<bool>(json['delivery']),
       imagePath: serializer.fromJson<String>(json['imagePath']),
       contact: serializer.fromJson<String>(json['contact']),
+      deliveryStatus: serializer.fromJson<String>(json['deliveryStatus']),
     );
   }
   @override
@@ -253,6 +275,7 @@ class Listing extends DataClass implements Insertable<Listing> {
       'delivery': serializer.toJson<bool>(delivery),
       'imagePath': serializer.toJson<String>(imagePath),
       'contact': serializer.toJson<String>(contact),
+      'deliveryStatus': serializer.toJson<String>(deliveryStatus),
     };
   }
 
@@ -265,7 +288,8 @@ class Listing extends DataClass implements Insertable<Listing> {
           String? location,
           bool? delivery,
           String? imagePath,
-          String? contact}) =>
+          String? contact,
+          String? deliveryStatus}) =>
       Listing(
         id: id ?? this.id,
         title: title ?? this.title,
@@ -276,6 +300,7 @@ class Listing extends DataClass implements Insertable<Listing> {
         delivery: delivery ?? this.delivery,
         imagePath: imagePath ?? this.imagePath,
         contact: contact ?? this.contact,
+        deliveryStatus: deliveryStatus ?? this.deliveryStatus,
       );
   Listing copyWithCompanion(ListingsCompanion data) {
     return Listing(
@@ -289,6 +314,9 @@ class Listing extends DataClass implements Insertable<Listing> {
       delivery: data.delivery.present ? data.delivery.value : this.delivery,
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       contact: data.contact.present ? data.contact.value : this.contact,
+      deliveryStatus: data.deliveryStatus.present
+          ? data.deliveryStatus.value
+          : this.deliveryStatus,
     );
   }
 
@@ -303,14 +331,15 @@ class Listing extends DataClass implements Insertable<Listing> {
           ..write('location: $location, ')
           ..write('delivery: $delivery, ')
           ..write('imagePath: $imagePath, ')
-          ..write('contact: $contact')
+          ..write('contact: $contact, ')
+          ..write('deliveryStatus: $deliveryStatus')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, title, description, category, price,
-      location, delivery, imagePath, contact);
+      location, delivery, imagePath, contact, deliveryStatus);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -323,7 +352,8 @@ class Listing extends DataClass implements Insertable<Listing> {
           other.location == this.location &&
           other.delivery == this.delivery &&
           other.imagePath == this.imagePath &&
-          other.contact == this.contact);
+          other.contact == this.contact &&
+          other.deliveryStatus == this.deliveryStatus);
 }
 
 class ListingsCompanion extends UpdateCompanion<Listing> {
@@ -336,6 +366,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
   final Value<bool> delivery;
   final Value<String> imagePath;
   final Value<String> contact;
+  final Value<String> deliveryStatus;
   const ListingsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -346,6 +377,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     this.delivery = const Value.absent(),
     this.imagePath = const Value.absent(),
     this.contact = const Value.absent(),
+    this.deliveryStatus = const Value.absent(),
   });
   ListingsCompanion.insert({
     this.id = const Value.absent(),
@@ -357,6 +389,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     this.delivery = const Value.absent(),
     required String imagePath,
     required String contact,
+    this.deliveryStatus = const Value.absent(),
   })  : title = Value(title),
         description = Value(description),
         category = Value(category),
@@ -374,6 +407,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     Expression<bool>? delivery,
     Expression<String>? imagePath,
     Expression<String>? contact,
+    Expression<String>? deliveryStatus,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -385,6 +419,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
       if (delivery != null) 'delivery': delivery,
       if (imagePath != null) 'image_path': imagePath,
       if (contact != null) 'contact': contact,
+      if (deliveryStatus != null) 'delivery_status': deliveryStatus,
     });
   }
 
@@ -397,7 +432,8 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
       Value<String>? location,
       Value<bool>? delivery,
       Value<String>? imagePath,
-      Value<String>? contact}) {
+      Value<String>? contact,
+      Value<String>? deliveryStatus}) {
     return ListingsCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
@@ -408,6 +444,7 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
       delivery: delivery ?? this.delivery,
       imagePath: imagePath ?? this.imagePath,
       contact: contact ?? this.contact,
+      deliveryStatus: deliveryStatus ?? this.deliveryStatus,
     );
   }
 
@@ -441,6 +478,9 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
     if (contact.present) {
       map['contact'] = Variable<String>(contact.value);
     }
+    if (deliveryStatus.present) {
+      map['delivery_status'] = Variable<String>(deliveryStatus.value);
+    }
     return map;
   }
 
@@ -455,7 +495,8 @@ class ListingsCompanion extends UpdateCompanion<Listing> {
           ..write('location: $location, ')
           ..write('delivery: $delivery, ')
           ..write('imagePath: $imagePath, ')
-          ..write('contact: $contact')
+          ..write('contact: $contact, ')
+          ..write('deliveryStatus: $deliveryStatus')
           ..write(')'))
         .toString();
   }
@@ -1375,6 +1416,7 @@ typedef $$ListingsTableCreateCompanionBuilder = ListingsCompanion Function({
   Value<bool> delivery,
   required String imagePath,
   required String contact,
+  Value<String> deliveryStatus,
 });
 typedef $$ListingsTableUpdateCompanionBuilder = ListingsCompanion Function({
   Value<int> id,
@@ -1386,6 +1428,7 @@ typedef $$ListingsTableUpdateCompanionBuilder = ListingsCompanion Function({
   Value<bool> delivery,
   Value<String> imagePath,
   Value<String> contact,
+  Value<String> deliveryStatus,
 });
 
 class $$ListingsTableFilterComposer
@@ -1423,6 +1466,10 @@ class $$ListingsTableFilterComposer
 
   ColumnFilters<String> get contact => $composableBuilder(
       column: $table.contact, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get deliveryStatus => $composableBuilder(
+      column: $table.deliveryStatus,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$ListingsTableOrderingComposer
@@ -1460,6 +1507,10 @@ class $$ListingsTableOrderingComposer
 
   ColumnOrderings<String> get contact => $composableBuilder(
       column: $table.contact, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get deliveryStatus => $composableBuilder(
+      column: $table.deliveryStatus,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$ListingsTableAnnotationComposer
@@ -1497,6 +1548,9 @@ class $$ListingsTableAnnotationComposer
 
   GeneratedColumn<String> get contact =>
       $composableBuilder(column: $table.contact, builder: (column) => column);
+
+  GeneratedColumn<String> get deliveryStatus => $composableBuilder(
+      column: $table.deliveryStatus, builder: (column) => column);
 }
 
 class $$ListingsTableTableManager extends RootTableManager<
@@ -1531,6 +1585,7 @@ class $$ListingsTableTableManager extends RootTableManager<
             Value<bool> delivery = const Value.absent(),
             Value<String> imagePath = const Value.absent(),
             Value<String> contact = const Value.absent(),
+            Value<String> deliveryStatus = const Value.absent(),
           }) =>
               ListingsCompanion(
             id: id,
@@ -1542,6 +1597,7 @@ class $$ListingsTableTableManager extends RootTableManager<
             delivery: delivery,
             imagePath: imagePath,
             contact: contact,
+            deliveryStatus: deliveryStatus,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -1553,6 +1609,7 @@ class $$ListingsTableTableManager extends RootTableManager<
             Value<bool> delivery = const Value.absent(),
             required String imagePath,
             required String contact,
+            Value<String> deliveryStatus = const Value.absent(),
           }) =>
               ListingsCompanion.insert(
             id: id,
@@ -1564,6 +1621,7 @@ class $$ListingsTableTableManager extends RootTableManager<
             delivery: delivery,
             imagePath: imagePath,
             contact: contact,
+            deliveryStatus: deliveryStatus,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

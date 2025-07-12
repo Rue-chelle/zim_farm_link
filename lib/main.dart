@@ -4,7 +4,7 @@ import 'views/marketplace/marketplace_screen.dart';
 import 'views/marketplace/add_listing_screen.dart';
 import 'views/assistant/assistant_screen.dart';
 import 'views/profile/profile_screen.dart';
-import 'views/ngo/ngo_dashboard.dart';
+import 'views/ngo/ngo_dashboard_screen.dart';
 import 'widgets/custom_navbar.dart';
 import 'db/local_db.dart';
 
@@ -22,7 +22,7 @@ class ZimFarmLinkApp extends StatefulWidget {
 class _ZimFarmLinkAppState extends State<ZimFarmLinkApp> {
   final db = LocalDatabase();
   int _selectedIndex = 0;
-  String _userRole = 'user'; // default
+  String _userRole = 'user'; // default role
 
   final List<Widget> _allScreens = [
     const HomeScreen(),
@@ -30,15 +30,15 @@ class _ZimFarmLinkAppState extends State<ZimFarmLinkApp> {
     const AddListingScreen(),
     const AssistantScreen(),
     const ProfileScreen(),
-    const NgoDashboardScreen(), // index 5 if role allows
+    const NGODashboardScreen(), // index 5 (only shown if user has role)
   ];
 
   @override
   void initState() {
     super.initState();
     _fetchUserRole();
-      // seedNgoUser(db); // <--- testing ngo
-}
+    // Optional for testing
+    // seedNgoUser(db);
   }
 
   Future<void> _fetchUserRole() async {
@@ -60,7 +60,7 @@ class _ZimFarmLinkAppState extends State<ZimFarmLinkApp> {
   Widget build(BuildContext context) {
     final screens = (_userRole == 'ngo' || _userRole == 'admin')
         ? _allScreens
-        : _allScreens.sublist(0, 5);
+        : _allScreens.sublist(0, 5); // Hide NGO screen if not permitted
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

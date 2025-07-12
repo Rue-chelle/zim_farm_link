@@ -60,6 +60,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
 
     final updatedProfile = UserProfile(
       id: widget.userProfile.id,
+      role: widget.userProfile.role,
       fullName: _fullNameController.text,
       farmingType: _farmingTypeController.text,
       email: _emailController.text,
@@ -85,7 +86,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            Text('Edit Profile', style: Theme.of(context).textTheme.headline6),
+            Text('Edit Profile', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             GestureDetector(
               onTap: _pickImage,

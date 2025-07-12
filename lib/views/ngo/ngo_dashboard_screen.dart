@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:zimfarmlink/db/local_db.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:zimfarmlink/views/ngo/all_listings_screen.dart';
+import 'package:zimfarmlink/views/ngo/manage_donations_screen.dart'; 
+import 'package:zimfarmlink/views/ngo/registered_farmers_screen.dart';
 
 import 'dart:io'; // for FileImage
 
@@ -102,7 +105,7 @@ class _NGODashboardScreenState extends State<NGODashboardScreen> {
   children: [
     statCard("Listings", totalListings, Icons.store, Colors.green, () {
       Navigator.push(context, MaterialPageRoute(
-        builder: (_) => const AllListingsScreen(), // to be created
+        builder: (_) => const AllListingsScreen (), // to be created
       ));
     }),
     const SizedBox(width: 10),

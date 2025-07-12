@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../db/local_db.dart';
-import 'edit_profile_modal.dart';
+import 'package:zimfarmlink/db/local_db.dart';
+import 'package:zimfarmlink/views/profile/edit_profile_modal.dart';
+import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,87 +11,82 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final LocalDatabase db = LocalDatabase();
-  UserProfile? _profile;
-  bool _loading = true;
+  late LocalDatabase db;
+  UserProfile? _userProfile;
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
+    db = LocalDatabase();
+    _loadUserProfile();
   }
 
-  Future<void> _loadProfile() async {
-    final profiles = await db.getUserProfiles();
-    setState(() {
-      _profile = profiles.isNotEmpty ? profiles.first : null;
-      _loading = false;
-    });
+  Future<void> _loadUserProfile() async {
+    final users = await db.getUserProfiles();
+    if (users.isNotEmpty) {
+      setState(() {
+        _userProfile = users.first;
+      });
+    }
   }
 
-  Future<void> _editProfile() async {
-    final updated = await showDialog<bool>(
-      context: context,
-      builder: (_) => EditProfileModal(db: db, existingProfile: _profile),
-    );
-    if (updated == true) {
-      _loadProfile();
+  void _editProfile() {
+    if (_userProfile != null) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => EditProfileModal(userProfile: _userProfile!),
+      ).then((_) => _loadUserProfile()); // Refresh after editing
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_profile == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: _editProfile,
-            child: const Text('Create Profile'),
-          ),
-        ),
-      );
+    if (_userProfile == null) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _editProfile,
-          )
-        ],
-      ),
+      appBar: AppBar(title: const Text("My Profile")),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             CircleAvatar(
-              radius: 60,
-              backgroundImage: _profile!.profileImage != null
-                  ? FileImage(File(_profile!.profileImage!))
-                  : null,
-              child: _profile!.profileImage == null
-                  ? const Icon(Icons.person, size: 60)
-                  : null,
+              radius: 40,
+              backgroundImage: _userProfile!.profileImage != null &&
+                      _userProfile!.profileImage!.isNotEmpty
+                  ? Image.file(File(_userProfile!.profileImage!)).image
+                  : const AssetImage("assets/placeholder.jpg"),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _userProfile!.fullName,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            Text(
+              _userProfile!.farmingType,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.email),
+              title: Text(_userProfile!.email ?? "No email"),
+            ),
+            ListTile(
+              leading: const Icon(Icons.phone),
+              title: Text(_userProfile!.phoneNumber ?? "No phone number"),
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_on),
+              title: Text(_userProfile!.location ?? "No location"),
             ),
             const SizedBox(height: 20),
-            Text(
-              _profile!.fullName,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.edit),
+              label: const Text("Edit Profile"),
+              onPressed: _editProfile,
             ),
-            const SizedBox(height: 10),
-            Text('Phone: ${_profile!.phoneNumber}'),
-            Text('Email: ${_profile!.email ?? "Not set"}'),
-            Text('Location: ${_profile!.location}'),
-            Text('Farming Type: ${_profile!.farmingType}'),
           ],
         ),
       ),

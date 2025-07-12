@@ -1,7 +1,9 @@
 import 'dart:io';
-
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart' as flutter;
+ 
 import 'package:zimfarmlink/db/local_db.dart';
 
 class AddDonationModal extends StatefulWidget {
@@ -71,10 +73,10 @@ class _AddDonationModalState extends State<AddDonationModal> {
           right: 16,
           top: 24),
       child: SingleChildScrollView(
-        child: Column(
+        child: flutter.Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Add Donation', style: Theme.of(context).textTheme.headline6),
+            Text('Add Donation', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             GestureDetector(
               onTap: _pickImage,
@@ -91,7 +93,7 @@ class _AddDonationModalState extends State<AddDonationModal> {
             const SizedBox(height: 12),
             Form(
               key: _formKey,
-              child: Column(
+              child: flutter.Column(
                 children: [
                   TextFormField(
                     controller: _titleController,
