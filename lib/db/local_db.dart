@@ -24,6 +24,8 @@ class Listings extends Table {
 
 // === User Profile Table ===
 class UserProfiles extends Table {
+  TextColumn get role =>
+      text().withDefault(const Constant('user'))(); // user | ngo | admin
   IntColumn get id => integer().autoIncrement()();
   TextColumn get fullName => text()();
   TextColumn get farmingType => text()();
@@ -86,6 +88,12 @@ class LocalDatabase extends _$LocalDatabase {
         profileImage: Value(profile.profileImage),
       ),
     );
+  }
+
+  // Get the first user (simulate current user for now)
+  Future<UserProfile?> getCurrentUser() async {
+    final users = await select(userProfiles).get();
+    return users.isNotEmpty ? users.first : null;
   }
 
   // === Donations ===

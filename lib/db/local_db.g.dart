@@ -467,6 +467,13 @@ class $UserProfilesTable extends UserProfiles
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $UserProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _roleMeta = const VerificationMeta('role');
+  @override
+  late final GeneratedColumn<String> role = GeneratedColumn<String>(
+      'role', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('user'));
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -512,8 +519,16 @@ class $UserProfilesTable extends UserProfiles
       'profile_image', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, fullName, farmingType, email, phoneNumber, location, profileImage];
+  List<GeneratedColumn> get $columns => [
+        role,
+        id,
+        fullName,
+        farmingType,
+        email,
+        phoneNumber,
+        location,
+        profileImage
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -524,6 +539,10 @@ class $UserProfilesTable extends UserProfiles
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('role')) {
+      context.handle(
+          _roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
+    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
@@ -570,6 +589,8 @@ class $UserProfilesTable extends UserProfiles
   UserProfile map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return UserProfile(
+      role: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       fullName: attachedDatabase.typeMapping
@@ -594,6 +615,7 @@ class $UserProfilesTable extends UserProfiles
 }
 
 class UserProfile extends DataClass implements Insertable<UserProfile> {
+  final String role;
   final int id;
   final String fullName;
   final String farmingType;
@@ -602,7 +624,8 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   final String? location;
   final String? profileImage;
   const UserProfile(
-      {required this.id,
+      {required this.role,
+      required this.id,
       required this.fullName,
       required this.farmingType,
       this.email,
@@ -612,6 +635,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['role'] = Variable<String>(role);
     map['id'] = Variable<int>(id);
     map['full_name'] = Variable<String>(fullName);
     map['farming_type'] = Variable<String>(farmingType);
@@ -632,6 +656,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
 
   UserProfilesCompanion toCompanion(bool nullToAbsent) {
     return UserProfilesCompanion(
+      role: Value(role),
       id: Value(id),
       fullName: Value(fullName),
       farmingType: Value(farmingType),
@@ -653,6 +678,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return UserProfile(
+      role: serializer.fromJson<String>(json['role']),
       id: serializer.fromJson<int>(json['id']),
       fullName: serializer.fromJson<String>(json['fullName']),
       farmingType: serializer.fromJson<String>(json['farmingType']),
@@ -666,6 +692,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'role': serializer.toJson<String>(role),
       'id': serializer.toJson<int>(id),
       'fullName': serializer.toJson<String>(fullName),
       'farmingType': serializer.toJson<String>(farmingType),
@@ -677,7 +704,8 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   }
 
   UserProfile copyWith(
-          {int? id,
+          {String? role,
+          int? id,
           String? fullName,
           String? farmingType,
           Value<String?> email = const Value.absent(),
@@ -685,6 +713,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
           Value<String?> location = const Value.absent(),
           Value<String?> profileImage = const Value.absent()}) =>
       UserProfile(
+        role: role ?? this.role,
         id: id ?? this.id,
         fullName: fullName ?? this.fullName,
         farmingType: farmingType ?? this.farmingType,
@@ -696,6 +725,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
       );
   UserProfile copyWithCompanion(UserProfilesCompanion data) {
     return UserProfile(
+      role: data.role.present ? data.role.value : this.role,
       id: data.id.present ? data.id.value : this.id,
       fullName: data.fullName.present ? data.fullName.value : this.fullName,
       farmingType:
@@ -713,6 +743,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   @override
   String toString() {
     return (StringBuffer('UserProfile(')
+          ..write('role: $role, ')
           ..write('id: $id, ')
           ..write('fullName: $fullName, ')
           ..write('farmingType: $farmingType, ')
@@ -725,12 +756,13 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, fullName, farmingType, email, phoneNumber, location, profileImage);
+  int get hashCode => Object.hash(role, id, fullName, farmingType, email,
+      phoneNumber, location, profileImage);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is UserProfile &&
+          other.role == this.role &&
           other.id == this.id &&
           other.fullName == this.fullName &&
           other.farmingType == this.farmingType &&
@@ -741,6 +773,7 @@ class UserProfile extends DataClass implements Insertable<UserProfile> {
 }
 
 class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
+  final Value<String> role;
   final Value<int> id;
   final Value<String> fullName;
   final Value<String> farmingType;
@@ -749,6 +782,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   final Value<String?> location;
   final Value<String?> profileImage;
   const UserProfilesCompanion({
+    this.role = const Value.absent(),
     this.id = const Value.absent(),
     this.fullName = const Value.absent(),
     this.farmingType = const Value.absent(),
@@ -758,6 +792,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
     this.profileImage = const Value.absent(),
   });
   UserProfilesCompanion.insert({
+    this.role = const Value.absent(),
     this.id = const Value.absent(),
     required String fullName,
     required String farmingType,
@@ -768,6 +803,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   })  : fullName = Value(fullName),
         farmingType = Value(farmingType);
   static Insertable<UserProfile> custom({
+    Expression<String>? role,
     Expression<int>? id,
     Expression<String>? fullName,
     Expression<String>? farmingType,
@@ -777,6 +813,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
     Expression<String>? profileImage,
   }) {
     return RawValuesInsertable({
+      if (role != null) 'role': role,
       if (id != null) 'id': id,
       if (fullName != null) 'full_name': fullName,
       if (farmingType != null) 'farming_type': farmingType,
@@ -788,7 +825,8 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   }
 
   UserProfilesCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? role,
+      Value<int>? id,
       Value<String>? fullName,
       Value<String>? farmingType,
       Value<String?>? email,
@@ -796,6 +834,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
       Value<String?>? location,
       Value<String?>? profileImage}) {
     return UserProfilesCompanion(
+      role: role ?? this.role,
       id: id ?? this.id,
       fullName: fullName ?? this.fullName,
       farmingType: farmingType ?? this.farmingType,
@@ -809,6 +848,9 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (role.present) {
+      map['role'] = Variable<String>(role.value);
+    }
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
@@ -836,6 +878,7 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   @override
   String toString() {
     return (StringBuffer('UserProfilesCompanion(')
+          ..write('role: $role, ')
           ..write('id: $id, ')
           ..write('fullName: $fullName, ')
           ..write('farmingType: $farmingType, ')
@@ -1543,6 +1586,7 @@ typedef $$ListingsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function()>;
 typedef $$UserProfilesTableCreateCompanionBuilder = UserProfilesCompanion
     Function({
+  Value<String> role,
   Value<int> id,
   required String fullName,
   required String farmingType,
@@ -1553,6 +1597,7 @@ typedef $$UserProfilesTableCreateCompanionBuilder = UserProfilesCompanion
 });
 typedef $$UserProfilesTableUpdateCompanionBuilder = UserProfilesCompanion
     Function({
+  Value<String> role,
   Value<int> id,
   Value<String> fullName,
   Value<String> farmingType,
@@ -1571,6 +1616,9 @@ class $$UserProfilesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get role => $composableBuilder(
+      column: $table.role, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
@@ -1602,6 +1650,9 @@ class $$UserProfilesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get role => $composableBuilder(
+      column: $table.role, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
@@ -1634,6 +1685,9 @@ class $$UserProfilesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get role =>
+      $composableBuilder(column: $table.role, builder: (column) => column);
+
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
@@ -1682,6 +1736,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$UserProfilesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
+            Value<String> role = const Value.absent(),
             Value<int> id = const Value.absent(),
             Value<String> fullName = const Value.absent(),
             Value<String> farmingType = const Value.absent(),
@@ -1691,6 +1746,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             Value<String?> profileImage = const Value.absent(),
           }) =>
               UserProfilesCompanion(
+            role: role,
             id: id,
             fullName: fullName,
             farmingType: farmingType,
@@ -1700,6 +1756,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             profileImage: profileImage,
           ),
           createCompanionCallback: ({
+            Value<String> role = const Value.absent(),
             Value<int> id = const Value.absent(),
             required String fullName,
             required String farmingType,
@@ -1709,6 +1766,7 @@ class $$UserProfilesTableTableManager extends RootTableManager<
             Value<String?> profileImage = const Value.absent(),
           }) =>
               UserProfilesCompanion.insert(
+            role: role,
             id: id,
             fullName: fullName,
             farmingType: farmingType,
