@@ -1,7 +1,7 @@
+
 import 'package:flutter/material.dart';
-import 'package:zimfarmlink/db/local_db.dart';
-import 'package:zimfarmlink/views/profile/edit_profile_modal.dart';
-import 'dart:io';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,85 +11,89 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late LocalDatabase db;
-  UserProfile? _userProfile;
+  final supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> _myListings = [];
+  String _userEmail = '';
+  String? _userId;
 
   @override
   void initState() {
     super.initState();
-    db = LocalDatabase();
-    _loadUserProfile();
+    _fetchProfileAndListings();
   }
 
-  Future<void> _loadUserProfile() async {
-    final users = await db.getUserProfiles();
-    if (users.isNotEmpty) {
-      setState(() {
-        _userProfile = users.first;
-      });
-    }
+  Future<void> _fetchProfileAndListings() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    _userId = user.id;
+    _userEmail = user.email ?? 'No email';
+
+    final response = await supabase
+        .from('listings')
+        .select()
+        .eq('user_id', _userId!)
+        .order('created_at', ascending: false);
+
+    setState(() => _myListings = response);
   }
 
-  void _editProfile() {
-    if (_userProfile != null) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (context) => EditProfileModal(userProfile: _userProfile!),
-      ).then((_) => _loadUserProfile()); // Refresh after editing
-    }
+  Future<void> _deleteListing(String id) async {
+    await supabase.from('listings').delete().eq('id', id);
+    _fetchProfileAndListings();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Listing deleted")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_userProfile == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return Scaffold(
-      appBar: AppBar(title: const Text("My Profile")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: _userProfile!.profileImage != null &&
-                      _userProfile!.profileImage!.isNotEmpty
-                  ? Image.file(File(_userProfile!.profileImage!)).image
-                  : const AssetImage("assets/placeholder.jpg"),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const SizedBox(height: 20),
+          CircleAvatar(
+            radius: 36,
+            backgroundColor: Colors.green.shade300,
+            child: const Icon(Icons.person, size: 40),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              _userEmail,
+              style: GoogleFonts.poppins(fontSize: 16),
             ),
-            const SizedBox(height: 16),
-            Text(
-              _userProfile!.fullName,
-              style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 30),
+          Text(
+            "My Listings",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade800,
             ),
-            Text(
-              _userProfile!.farmingType,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.email),
-              title: Text(_userProfile!.email ?? "No email"),
-            ),
-            ListTile(
-              leading: const Icon(Icons.phone),
-              title: Text(_userProfile!.phoneNumber ?? "No phone number"),
-            ),
-            ListTile(
-              leading: const Icon(Icons.location_on),
-              title: Text(_userProfile!.location ?? "No location"),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.edit),
-              label: const Text("Edit Profile"),
-              onPressed: _editProfile,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          if (_myListings.isEmpty)
+            const Text("You haven't added any listings yet."),
+          ..._myListings.map((l) => Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: ListTile(
+                  title: Text(l['title']),
+                  subtitle: Text("${l['type']} • ${l['category']}"),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteListing(l['id']),
+                  ),
+                ),
+              ))
+        ],
       ),
     );
   }
 }
+
