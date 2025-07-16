@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'views/home/home_screen.dart';
-import 'views/marketplace/marketplace.dart';
+import 'views/marketplace/marketplace_screen.dart';
 import 'views/marketplace/add_listing_screen.dart';
 import 'views/marketplace/listing_detail_screen.dart';
 import 'views/donations/donations_screen.dart';
 import 'views/donations/add_donation_screen.dart';
-import 'views/assistant/smart_assistant_screen.dart';
+import 'views/assistant/assistant_screen.dart';
+import 'views/shared/main_scaffold.dart';
 
 class ZimFarmLinkApp extends StatelessWidget {
   const ZimFarmLinkApp({super.key});
@@ -29,7 +30,11 @@ class ZimFarmLinkApp extends StatelessWidget {
         '/add-listing': (context) => const AddListingScreen(),
         '/donations': (context) => const DonationsScreen(),
         '/add-donation': (context) => const AddDonationScreen(),
-        '/assistant': (context) => const SmartAssistantScreen(),
+        '/assistant': (context) => const AssistantScreen(),
+         '/': (context) => const MainScaffold(),
+  '/add-listing': (context) => const AddListingScreen(),
+  '/add-donation': (context) => const AddDonationScreen(),
+  // Listing detail/edit still push directly with Navigator.push(...)
       },
     );
   }
