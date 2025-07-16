@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.zim_farm_link"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    flutter.ndkVersion= "android-ndk-r27c"
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
