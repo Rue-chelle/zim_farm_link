@@ -1,120 +1,100 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'edit_listing _screen.dart';
-import '../../db/local_db.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ListingDetailScreen extends StatelessWidget {
-  final Listing listing;
+  final Map<String, dynamic> listing;
   final VoidCallback onDelete;
-  final LocalDatabase _dbHelper = LocalDatabase();
 
-  ListingDetailScreen(
-      {super.key, required this.listing, required this.onDelete});
+  const ListingDetailScreen({
+    super.key,
+    required this.listing,
+    required this.onDelete,
+  });
 
-  void _deleteListing(BuildContext context) async {
-    await _dbHelper.deleteListing(listing.id);
+  Future<void> _delete(BuildContext context) async {
+    final supabase = Supabase.instance.client;
+
+    await supabase
+        .from('listings')
+        .delete()
+        .eq('id', listing['id']);
+
     onDelete();
-
     Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = listing['image_url'];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(listing.title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              final updated = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditListingScreen(listing: listing),
-                ),
-              );
-              if (updated == true) {
-                Navigator.pop(context, true);
-              }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Delete Listing?'),
-                  content: const Text(
-                      'Are you sure you want to delete this listing?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        _deleteListing(context);
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Delete',
-                          style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+        title: const Text('Listing Details'),
+        backgroundColor: Colors.green.shade800,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: ListView(
           children: [
-            Image.file(
-              File(listing.imagePath),
-              width: double.infinity,
-              height: 250,
-              fit: BoxFit.cover,
+            if (imageUrl != null && imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.network(
+                  imageUrl,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              Container(
+                height: 200,
+                width: double.infinity,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Text("No image available"),
+              ),
+            const SizedBox(height: 20),
+            _detailRow("Title", listing['title']),
+            _detailRow("Type", listing['type']),
+            _detailRow("Category", listing['category']),
+            _detailRow("Price", "\$${listing['price']}"),
+            _detailRow("Description", listing['description'] ?? '-'),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () => _delete(context),
+              icon: const Icon(Icons.delete_forever),
+              label: const Text("Delete Listing"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              listing.title,
-              style: Theme.of(context).textTheme.titleLarge,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: RichText(
+        text: TextSpan(
+          style: GoogleFonts.poppins(color: Colors.black, fontSize: 15),
+          children: [
+            TextSpan(
+              text: "$title: ",
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Price: \$${listing.price.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Location: ${listing.location}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Category: ${listing.category}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Contact: ${listing.contact}',
-              style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Description:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              listing.description,
-              style: const TextStyle(fontSize: 14),
-            ),
+            TextSpan(text: value),
           ],
         ),
       ),

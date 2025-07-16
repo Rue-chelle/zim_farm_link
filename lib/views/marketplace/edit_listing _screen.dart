@@ -1,166 +1,128 @@
-// ignore_for_file: file_names, use_build_context_synchronously
-
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
-import '../../db/local_db.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditListingScreen extends StatefulWidget {
-  final Listing listing;
+  final Map<String, dynamic> listing;
 
   const EditListingScreen({super.key, required this.listing});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _EditListingScreenState createState() => _EditListingScreenState();
+  State<EditListingScreen> createState() => _EditListingScreenState();
 }
 
 class _EditListingScreenState extends State<EditListingScreen> {
   final _formKey = GlobalKey<FormState>();
-  final LocalDatabase _dbHelper = LocalDatabase();
 
+  late String type;
   late String title;
-  late String description;
-  late String location;
   late String category;
-  late String contact;
   late double price;
-  late bool _delivery; // ✅ Added
-  File? imageFile;
+  late String description;
+  late String imageUrl;
 
-  final picker = ImagePicker();
+  final supabase = Supabase.instance.client;
 
   @override
   void initState() {
     super.initState();
     final l = widget.listing;
-    title = l.title;
-    description = l.description;
-    location = l.location;
-    category = l.category;
-    contact = l.contact;
-    price = l.price;
-    _delivery = l.delivery; // ✅ Initialize delivery
-    imageFile = File(l.imagePath);
+    type = l['type'];
+    title = l['title'];
+    category = l['category'];
+    price = l['price']?.toDouble() ?? 0.0;
+    description = l['description'] ?? '';
+    imageUrl = l['image_url'] ?? '';
   }
 
-  Future<void> pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final dir = await getApplicationDocumentsDirectory();
-      final filename = path.basename(pickedFile.path);
-      final savedImage =
-          await File(pickedFile.path).copy('${dir.path}/$filename');
-
-      setState(() {
-        imageFile = savedImage;
-      });
-    }
-  }
-
-  void saveListing() async {
-    if (_formKey.currentState!.validate() && imageFile != null) {
+  Future<void> _updateListing() async {
+    if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      final updatedListing = Listing(
-        id: widget.listing.id,
-        title: title,
-        description: description,
-        imagePath: imageFile!.path,
-        price: price,
-        location: location,
-        category: category,
-        contact: contact,
-        deliveryStatus: widget.listing.deliveryStatus,
-        delivery: _delivery, // ✅ Save delivery toggle
+      await supabase.from('listings').update({
+        'type': type,
+        'title': title,
+        'category': category,
+        'price': price,
+        'description': description,
+        'image_url': imageUrl,
+      }).eq('id', widget.listing['id']);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Listing updated!')),
       );
 
-      await _dbHelper.updateListing(updatedListing);
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Listing updated!')));
       Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Please complete all fields and select an image.')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Listing")),
+      appBar: AppBar(
+        title: const Text('Edit Listing'),
+        backgroundColor: Colors.green.shade800,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              GestureDetector(
-                onTap: pickImage,
-                child: imageFile == null
-                    ? Container(
-                        height: 150,
-                        color: Colors.grey[300],
-                        child: const Center(child: Text('Tap to pick image')),
-                      )
-                    : Image.file(imageFile!, height: 150, fit: BoxFit.cover),
+              DropdownButtonFormField<String>(
+                value: type,
+                decoration: const InputDecoration(labelText: 'Type'),
+                items: const [
+                  DropdownMenuItem(value: 'Crop', child: Text('Crop')),
+                  DropdownMenuItem(value: 'Livestock', child: Text('Livestock')),
+                ],
+                onChanged: (value) => setState(() => type = value!),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextFormField(
                 initialValue: title,
                 decoration: const InputDecoration(labelText: 'Title'),
-                onSaved: (value) => title = value ?? '',
-                validator: (value) => value!.isEmpty ? 'Enter a title' : null,
+                onSaved: (val) => title = val ?? '',
+                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
-                initialValue: description,
-                decoration: const InputDecoration(labelText: 'Description'),
-                onSaved: (value) => description = value ?? '',
-                validator: (value) =>
-                    value!.isEmpty ? 'Enter a description' : null,
+                initialValue: category,
+                decoration: const InputDecoration(labelText: 'Category'),
+                onSaved: (val) => category = val ?? '',
+                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
                 initialValue: price.toString(),
                 decoration: const InputDecoration(labelText: 'Price'),
                 keyboardType: TextInputType.number,
-                onSaved: (value) => price = double.tryParse(value ?? '') ?? 0,
-                validator: (value) => value!.isEmpty ? 'Enter a price' : null,
+                onSaved: (val) => price = double.tryParse(val!) ?? 0.0,
+                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 12),
               TextFormField(
-                initialValue: location,
-                decoration: const InputDecoration(labelText: 'Location'),
-                onSaved: (value) => location = value ?? '',
+                initialValue: description,
+                decoration: const InputDecoration(labelText: 'Description'),
+                onSaved: (val) => description = val ?? '',
+                maxLines: 3,
               ),
+              const SizedBox(height: 12),
               TextFormField(
-                initialValue: category,
-                decoration: const InputDecoration(labelText: 'Category'),
-                onSaved: (value) => category = value ?? '',
+                initialValue: imageUrl,
+                decoration: const InputDecoration(labelText: 'Image URL'),
+                onSaved: (val) => imageUrl = val ?? '',
               ),
-              TextFormField(
-                initialValue: contact,
-                decoration: const InputDecoration(labelText: 'Contact Info'),
-                onSaved: (value) => contact = value ?? '',
-              ),
-              const SizedBox(height: 16),
-
-              // ✅ Delivery switch
-              SwitchListTile(
-                title: const Text('Delivery Available'),
-                value: _delivery,
-                onChanged: (val) {
-                  setState(() {
-                    _delivery = val;
-                  });
-                },
-              ),
-
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: saveListing,
-                child: const Text('Save Changes'),
+              ElevatedButton.icon(
+                onPressed: _updateListing,
+                icon: const Icon(Icons.save),
+                label: const Text('Save Changes'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -169,3 +131,4 @@ class _EditListingScreenState extends State<EditListingScreen> {
     );
   }
 }
+

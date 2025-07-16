@@ -1,10 +1,7 @@
-import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-// import 'package:image_picker/image_picker.dart'; // ❌ Disabled for web temporarily
-// import 'package:google_fonts/google_fonts.dart';
-import '../../db/local_db.dart';
-import 'package:drift/drift.dart' hide Column;
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});
@@ -15,114 +12,35 @@ class AddListingScreen extends StatefulWidget {
 
 class _AddListingScreenState extends State<AddListingScreen> {
   final _formKey = GlobalKey<FormState>();
-  final db = LocalDatabase();
+  String type = 'Crop'; // or Livestock
+  String title = '';
+  String category = '';
+  double price = 0.0;
+  String description = '';
+  String imageUrl = '';
 
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _contactController = TextEditingController();
+  final supabase = Supabase.instance.client;
 
-  String? _category;
-  String? _region;
-  bool _delivery = false;
-  File? _image;
-
-  final List<String> categories = ['Crops', 'Livestock', 'Seeds', 'Tools'];
-  final List<String> regions = [
-    'Harare',
-    'Bulawayo',
-    'Manicaland',
-    'Masvingo',
-    'Midlands',
-    'Mashonaland East',
-    'Mashonaland West',
-    'Matabeleland North',
-    'Matabeleland South'
-  ];
-
-  // TEMPORARILY DISABLED FOR WEB
-  /*
-  Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      if (!mounted) return;
-      setState(() {
-        _image = File(picked.path);
-      });
-    }
-  }
-  */
-
-  void _pickImage() async {
-    if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image picking not supported on web.')),
-      );
-      return;
-    }
-
-    // Native image picker - re-enable when testing on device
-    /*
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      if (!mounted) return;
-      setState(() {
-        _image = File(picked.path);
-      });
-    }
-    */
-  }
-
-  void _submit() async {
+  Future<void> _submitListing() async {
     if (_formKey.currentState!.validate()) {
-      if (_image == null && !kIsWeb) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an image.')),
-        );
-        return;
-      }
+      _formKey.currentState!.save();
 
-      final entry = ListingsCompanion(
-        title: Value(_titleController.text),
-        description: Value(_descriptionController.text),
-        category: Value(_category ?? ''),
-        price: Value(double.tryParse(_priceController.text) ?? 0),
-        location: Value(_region ?? ''),
-        delivery: Value(_delivery),
-        imagePath: Value(_image?.path ?? 'no_image'), // Placeholder for web
-        contact: Value(_contactController.text),
-      );
-
-      await db.insertListing(entry);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Listing saved successfully!')),
-      );
-
-      _formKey.currentState!.reset();
-      setState(() {
-        _image = null;
-        _delivery = false;
-        _category = null;
-        _region = null;
+      await supabase.from('listings').insert({
+        'type': type,
+        'title': title,
+        'category': category,
+        'price': price,
+        'description': description,
+        'image_url': imageUrl,
+        'created_at': DateTime.now().toIso8601String(),
       });
 
-      _titleController.clear();
-      _descriptionController.clear();
-      _priceController.clear();
-      _contactController.clear();
-    }
-  }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Listing added successfully!')),
+      );
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _contactController.dispose();
-    super.dispose();
+      Navigator.pop(context, true);
+    }
   }
 
   @override
@@ -130,128 +48,62 @@ class _AddListingScreenState extends State<AddListingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Listing'),
-        backgroundColor: Colors.green.shade700,
+        backgroundColor: Colors.green.shade800,
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: ListView(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: _image == null
-                    ? Container(
-                        height: 160,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.grey[200],
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.add_a_photo, size: 40),
-                        ),
-                      )
-                    : kIsWeb
-                        ? Container(
-                            height: 160,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.grey[200],
-                            ),
-                            child: const Center(
-                              child: Text('Image preview not available on web'),
-                            ),
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              _image!,
-                              height: 160,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+              DropdownButtonFormField<String>(
+                value: type,
+                decoration: const InputDecoration(labelText: 'Type'),
+                items: const [
+                  DropdownMenuItem(value: 'Crop', child: Text('Crop')),
+                  DropdownMenuItem(value: 'Livestock', child: Text('Livestock')),
+                ],
+                onChanged: (value) => setState(() => type = value!),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Title'),
+                onSaved: (val) => title = val ?? '',
+                validator: (val) => val!.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Category'),
+                onSaved: (val) => category = val ?? '',
+                validator: (val) => val!.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Price (USD)'),
+                keyboardType: TextInputType.number,
+                onSaved: (val) => price = double.tryParse(val!) ?? 0.0,
+                validator: (val) => val!.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Description'),
+                onSaved: (val) => description = val ?? '',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Image URL (optional)'),
+                onSaved: (val) => imageUrl = val ?? '',
               ),
               const SizedBox(height: 20),
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Product Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _priceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Price (USD)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _category,
-                hint: const Text('Select Category'),
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                items: categories.map((cat) {
-                  return DropdownMenuItem(value: cat, child: Text(cat));
-                }).toList(),
-                onChanged: (val) => setState(() => _category = val),
-                validator: (val) => val == null ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _region,
-                hint: const Text('Select Region'),
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                items: regions.map((r) {
-                  return DropdownMenuItem(value: r, child: Text(r));
-                }).toList(),
-                onChanged: (val) => setState(() => _region = val),
-                validator: (val) => val == null ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _contactController,
-                decoration: const InputDecoration(
-                  labelText: 'Contact Info (e.g. WhatsApp number)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                value: _delivery,
-                onChanged: (val) => setState(() => _delivery = val),
-                title: const Text('Delivery Available?'),
-              ),
-              const SizedBox(height: 24),
               ElevatedButton.icon(
-                icon: const Icon(Icons.check),
-                onPressed: _submit,
+                onPressed: _submitListing,
+                icon: const Icon(Icons.cloud_upload),
                 label: const Text('Submit Listing'),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
                   backgroundColor: Colors.green.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
                 ),
               ),
             ],
