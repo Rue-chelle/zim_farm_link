@@ -23,19 +23,13 @@ class ZimFarmLinkApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.grey[100],
         useMaterial3: true,
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const HomeScreen(),
-        '/marketplace': (context) => const MarketplaceScreen(),
-        '/add-listing': (context) => const AddListingScreen(),
-        '/donations': (context) => const DonationsScreen(),
-        '/add-donation': (context) => const AddDonationScreen(),
-        '/assistant': (context) => const AssistantScreen(),
-         '/': (context) => const MainScaffold(),
+    initialRoute: '/',
+routes: {
+  '/': (context) => const MainScaffold(),
   '/add-listing': (context) => const AddListingScreen(),
   '/add-donation': (context) => const AddDonationScreen(),
   // Listing detail/edit still push directly with Navigator.push(...)
-      },
+},
     );
   }
 }
