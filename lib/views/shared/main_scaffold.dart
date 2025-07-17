@@ -18,7 +18,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     HomeScreen(),
     MarketplaceScreen(),
     DonationsScreen(),
-    AssistantScreen(),
+    SmartAssistantScreen(),
   ];
 
   final List<String> _titles = [

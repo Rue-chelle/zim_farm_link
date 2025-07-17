@@ -12,6 +12,6 @@ final Map<String, WidgetBuilder> appRoutes = {
   '/home': (context) => const HomeScreen(),
   '/addListing': (context) => const AddListingScreen(),
   '/marketplace': (context) => const MarketplaceScreen(),
-  '/assistant': (context) => const AssistantScreen(),
+  '/assistant': (context) => const SmartAssistantScreen(),
   '/community': (context) => const CommunityScreen(),
 };

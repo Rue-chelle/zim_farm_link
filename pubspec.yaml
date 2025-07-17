@@ -22,6 +22,7 @@ dependencies:
   flutter_tts: ^3.6.3
   # ✅ Added Supabase for cloud DB (web + mobile safe)
   supabase_flutter: ^1.10.17
+  image_picker: ^1.1.1
 
 dev_dependencies:
   flutter_test:

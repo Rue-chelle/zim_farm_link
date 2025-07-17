@@ -1,75 +1,80 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:zimfarmlink/db/local_db.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ManageDonationsScreen extends StatefulWidget {
-  const ManageDonationsScreen({super.key});
+  final String userId;
+
+  const ManageDonationsScreen({super.key, required this.userId});
 
   @override
   State<ManageDonationsScreen> createState() => _ManageDonationsScreenState();
 }
 
 class _ManageDonationsScreenState extends State<ManageDonationsScreen> {
-  late LocalDatabase db;
-  List<Donation> donations = [];
+  List<dynamic> _donations = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    db = LocalDatabase();
-    loadDonations();
+    _fetchUserDonations();
   }
 
-  Future<void> loadDonations() async {
-    final all = await db.getAllDonations();
+  Future<void> _fetchUserDonations() async {
+    final response = await Supabase.instance.client
+        .from('donations')
+        .select()
+        .eq('user_id', widget.userId)
+        .order('created_at', ascending: false);
+
     setState(() {
-      donations = all;
+      _donations = response;
+      _isLoading = false;
     });
   }
 
-  Future<void> deleteDonation(int id) async {
-    await db.deleteDonation(id);
-    loadDonations();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Donation deleted")),
-    );
+  Future<void> _deleteDonation(String donationId) async {
+    await Supabase.instance.client
+        .from('donations')
+        .delete()
+        .eq('id', donationId);
+
+    _fetchUserDonations(); // Refresh the list after deletion
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Manage Donations")),
-      body: donations.isEmpty
-          ? const Center(child: Text("No donations found."))
-          : ListView.builder(
-              itemCount: donations.length,
-              itemBuilder: (context, index) {
-                final donation = donations[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: donation.imagePath != null && donation.imagePath!.isNotEmpty
-                          ? FileImage(File(donation.imagePath!))
-                          : const AssetImage('assets/placeholder.jpg') as ImageProvider,
-                    ),
-                    title: Text(donation.title),
-                    subtitle: Text(donation.description),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(DateFormat.yMMMd().format(donation.dateAdded)),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => deleteDonation(donation.id),
+      appBar: AppBar(title: const Text('My Donations')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _donations.isEmpty
+              ? const Center(child: Text('No donations found.'))
+              : ListView.builder(
+                  itemCount: _donations.length,
+                  itemBuilder: (context, index) {
+                    final donation = _donations[index];
+                    return Card(
+                      margin: const EdgeInsets.all(8),
+                      child: ListTile(
+                        title: Text(donation['title']),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(donation['description']),
+                            Text('Status: ${donation['status']}'),
+                            Text('Type: ${donation['type']}'),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () =>
+                              _deleteDonation(donation['id'].toString()),
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

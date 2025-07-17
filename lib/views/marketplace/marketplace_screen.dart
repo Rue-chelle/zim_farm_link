@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:io';
-import 'package:zimfarmlink/db/local_db.dart';
-// import 'package:zimfarmlink/db/listing_model.dart';
-import 'package:zimfarmlink/views/marketplace/listing_detail_screen.dart';
-import 'package:zimfarmlink/views/marketplace/edit_listing _screen.dart';
+import '../../models/listing.dart';
+import 'listing_detail_screen.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -15,161 +12,146 @@ class MarketplaceScreen extends StatefulWidget {
 }
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
-  final db = LocalDatabase();
-  List<Listing> _listings = [];
+  final SupabaseClient supabase = Supabase.instance.client;
+  List<Listing> listings = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadListings();
+    fetchListings();
   }
 
-  Future<void> _loadListings() async {
-    final data = await db.getAllListings();
-    setState(() => _listings = data);
-  }
+  Future<void> fetchListings() async {
+    setState(() => isLoading = true);
+    final response = await supabase
+        .from('listings')
+        .select()
+        .order('created_at', ascending: false);
 
-  void _deleteListing(int id) async {
-    await db.deleteListing(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Listing deleted.')),
-    );
-    _loadListings();
-  }
-
-  void _refreshAfterDelete() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Listing deleted.')),
-    );
-    _loadListings();
-  }
-
-  void _editListing(Listing listing) async {
-    final updated = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EditListingScreen(listing: listing),
-      ),
-    );
-    if (updated == true) _loadListings();
+    listings = response.map((json) => Listing.fromJson(json)).toList();
+    setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Marketplace'),
-        backgroundColor: Colors.green.shade700,
-      ),
-      body: _listings.isEmpty
-          ? const Center(child: Text('No listings yet.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _listings.length,
-              itemBuilder: (context, index) {
-                final listing = _listings[index];
-                return GestureDetector(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ListingDetailScreen(
-                          listing: listing,
-                          onDelete: _refreshAfterDelete,
-                        ),
-                      ),
-                    );
-                    if (result == true) _loadListings();
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
+    return RefreshIndicator(
+      onRefresh: fetchListings,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Marketplace'),
+          centerTitle: true,
+          backgroundColor: Colors.green[700],
+          foregroundColor: Colors.white,
+        ),
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : listings.isEmpty
+                ? const Center(child: Text("No listings available."))
+                : ListView.builder(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade300,
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: kIsWeb
-                              ? Container(
-                                  color: Colors.grey[300],
-                                  height: 80,
+                    itemCount: listings.length,
+                    itemBuilder: (context, index) {
+                      final item = listings[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ListingDetailScreen(listing: item.toMap(), onDelete:(){
+                                    setState(() {
+                                      ;
+                                    });
+                                  }),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
+                              children: [
+                                Container(
                                   width: 80,
-                                  child: const Center(
-                                    child: Text('No image'),
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    image: item.imageUrl != null
+                                        ? DecorationImage(
+                                            image: NetworkImage(item.imageUrl!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const DecorationImage(
+                                            image: AssetImage(
+                                                'assets/placeholder.png'),
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.description,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style:
+                                            GoogleFonts.poppins(fontSize: 13),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            item.category,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: Colors.green[800],
+                                            ),
+                                          ),
+                                          Text(
+                                            '${item.price} USD',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    ],
                                   ),
                                 )
-                              : Image.file(
-                                  File(listing.imagePath),
-                                  height: 80,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                listing.title,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                listing.category,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '\$${listing.price.toStringAsFixed(2)}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  color: Colors.green[700],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  TextButton(
-                                    onPressed: () => _editListing(listing),
-                                    child: const Text('Edit'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => _deleteListing(listing.id),
-                                    child: const Text(
-                                      'Delete',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        )
-                      ],
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => Navigator.pushNamed(context, '/add-listing'),
+          backgroundColor: Colors.green[700],
+          child: const Icon(Icons.add),
+        ),
+      ),
     );
   }
 }
