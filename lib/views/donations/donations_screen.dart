@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zim_farm_link/models/donation_model.dart';
-import 'package:zim_farm_link/views/donations/donation_detail_screen.dart';
+import './donation_model.dart';
+import 'donation_detail_screen.dart';
 
 class DonationsScreen extends StatelessWidget {
   const DonationsScreen({super.key});
