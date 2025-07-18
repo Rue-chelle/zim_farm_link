@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:your_app_name/models/listing_model.dart';
-import 'package:your_app_name/screens/listing_detail_screen.dart';
+import 'listing_detail_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/listing.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({Key? key}) : super(key: key);
@@ -59,7 +59,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     return Scaffold(
       backgroundColor: Colors.green.shade50,
       appBar: AppBar(
-        title: const Text('Marketplace', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Marketplace',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green.shade700,
       ),
       body: isLoading
@@ -111,9 +112,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 child: Row(
                                   children: [
                                     ClipRRect(
-                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+                                      borderRadius:
+                                          const BorderRadius.horizontal(
+                                              left: Radius.circular(15)),
                                       child: Image.network(
-                                        item.url ?? 'https://via.placeholder.com/100',
+                                        item.url ??
+                                            'https://via.placeholder.com/100',
                                         width: 100,
                                         height: 100,
                                         fit: BoxFit.cover,
@@ -123,13 +127,22 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(12.0),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                            Text(item.title,
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16)),
                                             const SizedBox(height: 4),
-                                            Text(item.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                            Text(item.description,
+                                                maxLines: 2,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
                                             const SizedBox(height: 6),
-                                            Text('\$${item.price}', style: const TextStyle(color: Colors.green)),
+                                            Text('\$${item.price}',
+                                                style: const TextStyle(
+                                                    color: Colors.green)),
                                           ],
                                         ),
                                       ),
@@ -146,4 +159,3 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 }
-
