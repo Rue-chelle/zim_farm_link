@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'views/shared/main_scaffold.dart';
 import 'views/marketplace/add_listing_screen.dart';
-import 'views/marketplace/listing_detail_screen.dart';
-import 'views/marketplace/edit_listing _screen.dart';
 import 'views/donations/add_donation_screen.dart';
 
 class ZimFarmLinkApp extends StatelessWidget {

@@ -61,7 +61,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               builder: (_) =>
                                   ListingDetailScreen(listing: item.toMap(), onDelete:(){
                                     setState(() {
-                                      ;
                                     });
                                   }),
                             ),
