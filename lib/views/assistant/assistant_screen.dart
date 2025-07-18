@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -34,7 +33,8 @@ class _SmartAssistantScreenState extends State<SmartAssistantScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Smart Recommendations"),
-        content: const Text("✅ Best crops to plant now:\n\n• Maize\n• Groundnuts\n• Sorghum"),
+        content: const Text(
+            "✅ Best crops to plant now:\n\n• Maize\n• Groundnuts\n• Sorghum"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -132,10 +132,14 @@ class AssistantCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
                   const SizedBox(height: 4),
                   Text(subtitle,
-                      style: const TextStyle(fontSize: 14, color: Colors.white70)),
+                      style:
+                          const TextStyle(fontSize: 14, color: Colors.white70)),
                 ],
               ),
             ),
@@ -144,3 +148,4 @@ class AssistantCard extends StatelessWidget {
       ),
     );
   }
+}
