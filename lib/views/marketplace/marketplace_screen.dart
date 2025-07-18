@@ -1,174 +1,149 @@
 import 'package:flutter/material.dart';
-import 'add_listing_screen.dart';
-import 'listing_detail_screen.dart';
-import 'package:zimfarmlink/models/listing.dart';
+import 'package:your_app_name/models/listing_model.dart';
+import 'package:your_app_name/screens/listing_detail_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({Key? key}) : super(key: key);
 
   @override
-  State<MarketplaceScreen> createState() => _MarketplaceScreenState();
+  _MarketplaceScreenState createState() => _MarketplaceScreenState();
 }
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
-  List<Listing> listings = [
-    Listing(
-        userId: 'May',
-        id: 'Farmer',
-        title: 'Fresh Tomatoes',
-        description: 'Organic tomatoes harvested yesterday.',
-        price: 12,
-        imageUrl:
-            'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2',
-        category: 'crop',
-        createdAt: DateTime(2025)),
-    Listing(
-        userId: 'Ronald',
-        id: 'Farmer',
-        title: 'Maize (10kg)',
-        category: 'Crop',
-        description: 'Clean, dried, and ready for grinding.',
-        price: 30,
-        imageUrl:
-            'https://images.unsplash.com/photo-1576186726113-2b9c3214d85b',
-        createdAt: DateTime(2025)),
-  ];
-
+  List<ListingModel> listings = [];
+  List<ListingModel> filteredListings = [];
+  bool isLoading = true;
   String searchQuery = '';
 
   @override
-  Widget build(BuildContext context) {
-    List<Listing> filteredListings = listings
-        .where((item) =>
-            item.title.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
+  void initState() {
+    super.initState();
+    fetchListings();
+  }
 
+  Future<void> fetchListings() async {
+    final response = await Supabase.instance.client
+        .from('listings')
+        .select()
+        .order('created_at', ascending: false);
+
+    setState(() {
+      listings = (response as List)
+          .map((data) => ListingModel.fromMap(data as Map<String, dynamic>))
+          .toList();
+      filteredListings = listings;
+      isLoading = false;
+    });
+  }
+
+  void filterListings(String query) {
+    final filtered = listings.where((listing) {
+      final title = listing.title.toLowerCase();
+      return title.contains(query.toLowerCase());
+    }).toList();
+
+    setState(() {
+      searchQuery = query;
+      filteredListings = filtered;
+    });
+  }
+
+  void deleteListing(String id) async {
+    await Supabase.instance.client.from('listings').delete().match({'id': id});
+    fetchListings(); // Refresh
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: Colors.green.shade50,
       appBar: AppBar(
-        title: const Text('Marketplace', style: TextStyle(color: Colors.black)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.green),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddListingScreen()),
-              );
-            },
-          ),
-        ],
+        title: const Text('Marketplace', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.green.shade700,
       ),
-      body: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 4,
-                  color: Colors.black.withOpacity(0.05),
-                  offset: const Offset(0, 2),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextField(
+                    onChanged: filterListings,
+                    decoration: InputDecoration(
+                      hintText: 'Search by title...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: filteredListings.isEmpty
+                      ? const Center(child: Text('No listings found.'))
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          itemCount: filteredListings.length,
+                          itemBuilder: (context, index) {
+                            final item = filteredListings[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ListingDetailScreen(
+                                      listing: item,
+                                      onDelete: () => deleteListing(item.id),
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                margin: const EdgeInsets.symmetric(vertical: 8),
+                                elevation: 3,
+                                child: Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+                                      child: Image.network(
+                                        item.url ?? 'https://via.placeholder.com/100',
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                            const SizedBox(height: 4),
+                                            Text(item.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                            const SizedBox(height: 6),
+                                            Text('\$${item.price}', style: const TextStyle(color: Colors.green)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
-            child: TextField(
-              onChanged: (value) => setState(() => searchQuery = value),
-              decoration: const InputDecoration(
-                icon: Icon(Icons.search, color: Colors.grey),
-                hintText: 'Search produce...',
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          Expanded(
-            child: filteredListings.isEmpty
-                ? const Center(child: Text("No listings found."))
-                : ListView.builder(
-                    itemCount: filteredListings.length,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemBuilder: (context, index) {
-                      final item = filteredListings[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ListingDetailScreen(listing: item, onDelete: (){delete from superbase and refresh state
-                            ),
-                          );
-                        },
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 2,
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  bottomLeft: Radius.circular(16),
-                                ),
-                                child: Image.network(
-                                  item.imageUrl,
-                                  height: 100,
-                                  width: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.title,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        item.description,
-                                        style: const TextStyle(fontSize: 13),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '\$${item.price}',
-                                        style: TextStyle(
-                                          color: Colors.green.shade700,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
     );
   }
 }
+
