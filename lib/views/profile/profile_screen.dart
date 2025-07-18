@@ -1,97 +1,103 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zim_farm_link/views/profile/my_listings_screen.dart';
+import 'package:zim_farm_link/auth/login_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  final supabase = Supabase.instance.client;
-  List<Map<String, dynamic>> _myListings = [];
-  String _userEmail = '';
-  String? _userId;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProfileAndListings();
-  }
-
-  Future<void> _fetchProfileAndListings() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
-
-    _userId = user.id;
-    _userEmail = user.email ?? 'No email';
-
-    final response = await supabase
-        .from('listings')
-        .select()
-        .eq('user_id', _userId!)
-        .order('created_at', ascending: false);
-
-    setState(() => _myListings = response);
-  }
-
-  Future<void> _deleteListing(String id) async {
-    await supabase.from('listings').delete().eq('id', id);
-    _fetchProfileAndListings();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Listing deleted")),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+
+    if (user == null) {
+      return const Center(child: Text('User not logged in.'));
+    }
+
     return Scaffold(
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const SizedBox(height: 20),
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: Colors.green.shade300,
-            child: const Icon(Icons.person, size: 40),
+      appBar: AppBar(
+        backgroundColor: Colors.green.shade700,
+        title: const Text(
+          'My Profile',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Color(0xFFE8F5E9)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              _userEmail,
-              style: GoogleFonts.poppins(fontSize: 16),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.green.shade200,
+              child: const Icon(Icons.person, size: 60, color: Colors.white),
             ),
-          ),
-          const SizedBox(height: 30),
-          Text(
-            "My Listings",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green.shade800,
+            const SizedBox(height: 20),
+            Text(
+              user.userMetadata?['full_name'] ?? 'User',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-          ),
-          const SizedBox(height: 12),
-          if (_myListings.isEmpty)
-            const Text("You haven't added any listings yet."),
-          ..._myListings.map((l) => Card(
-                elevation: 2,
+            Text(
+              user.email ?? '',
+              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyListingsScreen()),
+                );
+              },
+              icon: const Icon(Icons.list_alt),
+              label: const Text('My Listings'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.green.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                child: ListTile(
-                  title: Text(l['title']),
-                  subtitle: Text("${l['type']} • ${l['category']}"),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _deleteListing(l['id']),
-                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ))
-        ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: const Text(
+                'Sign Out',
+                style: TextStyle(color: Colors.red),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                side: const BorderSide(color: Colors.red),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
