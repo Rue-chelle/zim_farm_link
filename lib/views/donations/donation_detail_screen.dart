@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zim_farm_link/models/donation_model.dart';
+import 'donation_model.dart';
 
 class DonationDetailScreen extends StatelessWidget {
   final DonationModel donation;
@@ -27,9 +27,7 @@ class DonationDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  donation.type == 'Livestock'
-                      ? Icons.pets
-                      : Icons.agriculture,
+                  donation.type == 'Livestock' ? Icons.pets : Icons.agriculture,
                   size: 60,
                   color: Colors.green.shade600,
                 ),
