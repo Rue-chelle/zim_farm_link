@@ -1,161 +1,103 @@
 import 'package:flutter/material.dart';
-import '../marketplace/marketplace_screen.dart';
-import '../donations/donations_screen.dart';
-import '../profile/profile_screen.dart';
-import '../assistant/assistant_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zim_farm_link/views/marketplace/listing_detail_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class MarketplaceScreen extends StatefulWidget {
+  const MarketplaceScreen({super.key});
+
+  @override
+  State<MarketplaceScreen> createState() => _MarketplaceScreenState();
+}
+
+class _MarketplaceScreenState extends State<MarketplaceScreen> {
+  final supabase = Supabase.instance.client;
+
+  Future<List<Map<String, dynamic>>> fetchListings() async {
+    final response = await supabase.from('Listings').select('*');
+    return response;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cardData = [
-      {
-        'title': 'Marketplace',
-        'subtitle': 'Buy & Sell Crops/Livestock',
-        'icon': Icons.shopping_cart_outlined,
-        'color': Colors.green[600],
-        'route': const MarketplaceScreen(),
-      },
-      {
-        'title': 'Donations',
-        'subtitle': 'Give or Claim Produce',
-        'icon': Icons.volunteer_activism_outlined,
-        'color': Colors.orange[700],
-        'route': const DonationsScreen(),
-      },
-      {
-        'title': 'Smart Assistant',
-        'subtitle': 'Farming Help & AI Tools',
-        'icon': Icons.agriculture_outlined,
-        'color': Colors.blue[600],
-        'route': const SmartAssistantScreen(),
-      },
-      {
-        'title': 'My Profile',
-        'subtitle': 'Account & Listings',
-        'icon': Icons.person_outline,
-        'color': Colors.teal[700],
-        'route': const ProfileScreen(),
-      },
-    ];
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text(
-          'ZimFarmLink',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.green[700],
+        title: const Text('Marketplace', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.green,
+        elevation: 1,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: cardData.map((card) {
-            return _AnimatedHomeCard(
-              title: card['title'] as String,
-              subtitle: card['subtitle'] as String,
-              icon: card['icon'] as IconData,
-              color: card['color'] as Color,
-              destination: card['route'] as Widget,
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-}
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: fetchListings(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No listings found.'));
+          }
 
-class _AnimatedHomeCard extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final Widget destination;
+          final listings = snapshot.data!;
 
-  const _AnimatedHomeCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.destination,
-  });
-
-  @override
-  State<_AnimatedHomeCard> createState() => _AnimatedHomeCardState();
-}
-
-class _AnimatedHomeCardState extends State<_AnimatedHomeCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 150));
-    _scale = Tween(begin: 1.0, end: 0.97).animate(_controller);
-  }
-
-  void _onTapDown(_) => _controller.forward();
-  void _onTapUp(_) => _controller.reverse();
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: (details) => _onTapUp(details),
-      onTapCancel: () => _controller.reverse(),
-      onTap: () {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (_) => widget.destination));
-      },
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          decoration: BoxDecoration(
-            color: widget.color,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-                offset: const Offset(2, 4),
-              )
-            ],
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(widget.icon, size: 36, color: Colors.white),
-              const SizedBox(height: 12),
-              Text(
-                widget.title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+          return GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: listings.length,
+            itemBuilder: (context, index) {
+              final listing = listings[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ListingDetailScreen(listing: listing),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          child: Image.network(
+                            listing['image_url'] ?? '',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.image),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          listing['title'] ?? '',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          '${listing['price']} USD',
+                          style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-        ),
+              );
+            },
+          );
+        },
       ),
     );
   }
