@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:zim_farm_link/models/listing.dart';
-import 'package:zim_farm_link/views/marketplace/add_listing_screen.dart';
-import 'package:zim_farm_link/views/marketplace/listing_detail_screen.dart';
+import 'add_listing_screen.dart';
+import 'listing_detail_screen.dart';
+import 'package:zimfarmlink/models/listing.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({Key? key}) : super(key: key);
@@ -13,19 +13,25 @@ class MarketplaceScreen extends StatefulWidget {
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   List<Listing> listings = [
     Listing(
-      id: 1,
-      title: 'Fresh Tomatoes',
-      description: 'Organic tomatoes harvested yesterday.',
-      price: 12,
-      imageUrl: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2',
-    ),
+        userId: 'May',
+        id: 'Farmer',
+        title: 'Fresh Tomatoes',
+        description: 'Organic tomatoes harvested yesterday.',
+        price: 12,
+        imageUrl:
+            'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2',
+        category: 'crop',
+        createdAt: DateTime(2025)),
     Listing(
-      id: 2,
-      title: 'Maize (10kg)',
-      description: 'Clean, dried, and ready for grinding.',
-      price: 30,
-      imageUrl: 'https://images.unsplash.com/photo-1576186726113-2b9c3214d85b',
-    ),
+        userId: 'Ronald',
+        id: 'Farmer',
+        title: 'Maize (10kg)',
+        category: 'Crop',
+        description: 'Clean, dried, and ready for grinding.',
+        price: 30,
+        imageUrl:
+            'https://images.unsplash.com/photo-1576186726113-2b9c3214d85b',
+        createdAt: DateTime(2025)),
   ];
 
   String searchQuery = '';
@@ -94,7 +100,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ListingDetailScreen(listing: item),
+                              builder: (_) =>
+                                  ListingDetailScreen(listing: item, onDelete: (){delete from superbase and refresh state
                             ),
                           );
                         },
@@ -165,4 +172,3 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     );
   }
 }
-
