@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../views/donations/donations_screen.dart';
-import '../views/profile/profile_screen.dart';
-import '../views/ngo/ngo_dashboard.dart';
-import '../theme/colors.dart';
+import '../donations/donations_screen.dart';
+import '../profile/profile_screen.dart';
+import '../ngo/ngo_dashboard.dart';
+import '../../theme/colors.dart';
 
 class NGONav extends StatefulWidget {
   const NGONav({super.key});

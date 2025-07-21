@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'views/home/home_screen.dart';
-import 'views/marketplace/marketplace_screen.dart';
-import 'views/marketplace/add_listing_screen.dart';
-import 'views/assistant/assistant_screen.dart';
-import 'views/profile/profile_screen.dart';
-import 'widgets/custom_navbar.dart';
+import '../home/home_screen.dart';
+import '../marketplace/marketplace_screen.dart';
+import '../marketplace/add_listing_screen.dart';
+import '../assistant/assistant_screen.dart';
+import '../profile/profile_screen.dart';
+import '../../widgets/custom_navbar.dart';
 
 class MainAppShell extends StatefulWidget {
   const MainAppShell({super.key});
