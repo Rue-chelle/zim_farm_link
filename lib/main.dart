@@ -14,13 +14,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-<<<<<<< HEAD
-    url: 'https://your-project-id.supabase.co', // replace with your project URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqYXpzZ29hcGNjb2Z0c2xvbXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3NTAyMDcsImV4cCI6MjA2ODMyNjIwN30.AY-hwH_p-MN7cLZ29M2EGkSscf9aSAtEszCIRUOqhCQ', 
-=======
     url: 'https://your-project-id.supabase.co', // Replace
     anonKey: 'your-anon-key', // Replace
->>>>>>> 3c4653718fb77b8d28db121f96f55742c49f6698
   );
 
   runApp(const ZimFarmLinkApp());
