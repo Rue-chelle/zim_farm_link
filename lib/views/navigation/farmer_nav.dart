@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../marketplace/marketplace_screen.dart';
 import '../assistant/assistant_screen.dart';
 import '../profile/profile_screen.dart';
-import '../../theme/colors.dart'; 
+import '../../theme/colours.dart';
 
 class FarmerNav extends StatefulWidget {
   const FarmerNav({super.key});

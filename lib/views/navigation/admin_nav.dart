@@ -4,7 +4,7 @@ import '../admin/admin_dashboard.dart';
 import '../donations/donations_screen.dart';
 import '../marketplace/marketplace_screen.dart';
 import '../profile/profile_screen.dart';
-import '../../theme/colors.dart';
+import '../../theme/colours.dart';
 
 class AdminNav extends StatefulWidget {
   const AdminNav({super.key});

@@ -97,7 +97,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => ListingDetailScreen(
-                                      listing: item,
+                                      listing: item.toMap(), 
                                       onDelete: () => deleteListing(item.id),
                                     ),
                                   ),
@@ -116,7 +116,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                           const BorderRadius.horizontal(
                                               left: Radius.circular(15)),
                                       child: Image.network(
-                                        item.url ??
+                                        item.imageUrl ??
                                             'https://via.placeholder.com/100',
                                         width: 100,
                                         height: 100,

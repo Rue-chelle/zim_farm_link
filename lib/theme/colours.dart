@@ -8,6 +8,7 @@ class AppColors {
   static const Color textPrimary = Color(0xFF212121); // Dark text
   static const Color textSecondary = Color(0xFF757575); // Grey text
   static const Color danger = Color(0xFFE53935); // Red for delete
+  static const Color textMuted = Color(0xFF9E9E9E);
   static const Color success = Color(0xFF43A047); // Dark green for confirmed actions
   static const Color inputBackground = Color(0xFFE8F5E9); // Soft green input background
 }

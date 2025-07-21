@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../donations/donations_screen.dart';
 import '../profile/profile_screen.dart';
 import '../ngo/ngo_dashboard.dart';
-import '../../theme/colors.dart';
+import '../../theme/colours.dart';
 
 class NGONav extends StatefulWidget {
   const NGONav({super.key});
