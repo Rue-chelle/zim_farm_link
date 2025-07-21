@@ -1,25 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../main_app_shell.dart';
+import '../views/farmer/farmer_nav.dart';
+import '../views/buyer/buyer_nav.dart';
+import '../views/ngo/ngo_nav.dart';
+import '../views/admin/admin_nav.dart';
+import '../auth/login.dart';
+import '../services/user_role_service.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SupabaseAuthWidget(
-      // Automatically shows login/signup UI
-      child: Builder(
-        builder: (context) {
-          final session = Supabase.instance.client.auth.currentSession;
-          if (session == null) {
-            // Auth UI will be shown automatically
-            return const SizedBox();
-          } else {
-            return const MainAppShell(); // This replaces what you had in main.dart
-          }
-        },
-      ),
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = Supabase.instance.client.auth.currentSession;
+
+        if (session == null) {
+          return const LoginScreen();
+        } else {
+          return FutureBuilder<String>(
+            future: UserRoleService.getUserRole(session.user.id),
+            builder: (context, roleSnapshot) {
+              if (!roleSnapshot.hasData) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final role = roleSnapshot.data!;
+              switch (role) {
+                case 'farmer':
+                  return const FarmerNav();
+                case 'buyer':
+                  return const BuyerNav();
+                case 'ngo':
+                  return const NGONav();
+                case 'admin':
+                  return const AdminNav();
+                default:
+                  return const Scaffold(
+                    body: Center(child: Text('Unknown role')),
+                  );
+              }
+            },
+          );
+        }
+      },
     );
   }
 }
