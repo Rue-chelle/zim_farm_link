@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'listing_detail_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/listing.dart';
+import '../../models/listing.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({Key? key}) : super(key: key);
@@ -11,8 +11,8 @@ class MarketplaceScreen extends StatefulWidget {
 }
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
-  List<ListingModel> listings = [];
-  List<ListingModel> filteredListings = [];
+  List<Listing> listings = [];
+  List<Listing> filteredListings = [];
   bool isLoading = true;
   String searchQuery = '';
 
@@ -30,7 +30,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
     setState(() {
       listings = (response as List)
-          .map((data) => ListingModel.fromMap(data as Map<String, dynamic>))
+          .map((data) => Listing.fromJson(data as Map<String, dynamic>))
           .toList();
       filteredListings = listings;
       isLoading = false;

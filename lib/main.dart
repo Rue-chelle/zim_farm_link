@@ -13,7 +13,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: 'https://your-project-id.supabase.co', // replace with your project URL
-    anonKey: 'your-anon-key', // replace with your anon key
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqYXpzZ29hcGNjb2Z0c2xvbXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3NTAyMDcsImV4cCI6MjA2ODMyNjIwN30.AY-hwH_p-MN7cLZ29M2EGkSscf9aSAtEszCIRUOqhCQ', 
   );
 
   runApp(const ZimFarmLinkApp());
