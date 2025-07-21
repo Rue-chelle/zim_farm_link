@@ -33,21 +33,20 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
       return;
     }
 
-    final response = await Supabase.instance.client
-        .from('UserProfiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-        .execute();
+    try {
+      final response = await Supabase.instance.client
+          .from('UserProfiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
 
-    if (response.error != null) {
       setState(() {
-        _role = null;
+        _role = response?['role'] as String?;
         _loading = false;
       });
-    } else {
+    } catch (e) {
       setState(() {
-        _role = response.data['role'] as String?;
+        _role = null;
         _loading = false;
       });
     }
