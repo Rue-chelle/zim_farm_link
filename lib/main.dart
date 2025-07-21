@@ -1,43 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'views/auth/login_screen.dart';
-import 'views/home/home_screen.dart';
-import 'views/marketplace/marketplace_screen.dart';
-import 'views/marketplace/add_listing_screen.dart';
-import 'views/assistant/assistant_screen.dart';
-import 'views/profile/profile_screen.dart';
-import 'widgets/custom_navbar.dart';
-import 'views/shared/splash_screen.dart';
+import 'auth/auth_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: 'https://your-project-id.supabase.co', // Replace
-    anonKey: 'your-anon-key', // Replace
+    url: 'https://your-project.supabase.co',
+    anonKey: 'your-anon-key',
   );
 
-  runApp(const ZimFarmLinkApp());
+  runApp(const MyApp());
 }
 
-class ZimFarmLinkApp extends StatelessWidget {
-  const ZimFarmLinkApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ZimFarmLink',
-      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.grey[50],
-        appBarTheme: const AppBarTheme(elevation: 0),
+        primarySwatch: Colors.green,
+        fontFamily: 'Roboto',
       ),
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.system,
-      home: const SplashScreen(),
+      debugShowCheckedModeBanner: false,
+      home: const AuthGate(),
     );
   }
 }
-
