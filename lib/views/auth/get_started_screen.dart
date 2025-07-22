@@ -13,7 +13,7 @@ class GetStartedScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/images/farming_logo.png', height: 120),
+            // Image.asset('assets/images/farming_logo.png', height: 120), unable to load
             const SizedBox(height: 30),
             const Text(
               'Welcome to ZimFarmLink!',
