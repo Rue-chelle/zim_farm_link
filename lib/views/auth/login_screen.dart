@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../theme/colours.dart';
-import '../../widgets/auth_form_field.dart';
-import '../../navigation/main_navigation_wrapper.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_textfield.dart';
+import '../navigation/main_navigation_wrapper.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,80 +13,100 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool _loading = false;
 
-  Future<void> _login() async {
-    setState(() => _isLoading = true);
+  Future<void> _signIn() async {
+    setState(() => _loading = true);
 
     try {
-      final res = await Supabase.instance.client.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      final AuthResponse res = await Supabase.instance.client.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
       if (res.user != null) {
-        if (context.mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MainNavigationWrapper()),
-          );
-        }
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainNavigationWrapper()),
+        );
+      } else {
+        _showMessage("Invalid email or password.");
       }
-    } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+    } on AuthException catch (error) {
+      _showMessage(error.message);
+    } catch (e) {
+      _showMessage("An unexpected error occurred.");
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _loading = false);
     }
   }
 
-  void _goToSignup() {
-    Navigator.pushNamed(context, '/signup');
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Welcome Back 👋',
-                  style: Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height: 12),
-              Text('Login to your ZimFarmLink account',
-                  style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 32),
-              AuthFormField(
-                controller: _emailController,
-                label: 'Email',
-                icon: Icons.email,
-              ),
-              const SizedBox(height: 16),
-              AuthFormField(
-                controller: _passwordController,
-                label: 'Password',
-                icon: Icons.lock,
-                isPassword: true,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Login'),
-              ),
-              TextButton(
-                onPressed: _goToSignup,
-                child: const Text("Don't have an account? Sign up"),
-              )
-            ],
+      backgroundColor: Colors.green.shade50,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/logo.png', height: 100),
+                const SizedBox(height: 24),
+                const Text(
+                  'Welcome Back to ZimFarmLink',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Email',
+                  controller: emailController,
+                  icon: Icons.email,
+                ),
+                const SizedBox(height: 12),
+                CustomTextField(
+                  label: 'Password',
+                  controller: passwordController,
+                  icon: Icons.lock,
+                  isPassword: true,
+                ),
+                const SizedBox(height: 20),
+                _loading
+                    ? const CircularProgressIndicator()
+                    : CustomButton(
+                        text: 'Login',
+                        onTap: _signIn,
+                      ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignupScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Don't have an account? Sign Up",
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
