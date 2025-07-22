@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -9,65 +10,97 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final SupabaseClient supabase = Supabase.instance.client;
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  String? error;
-  bool isLoading = false;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String _selectedRole = 'farmer'; // default role
+  bool _isLoading = false;
 
-  Future<void> signup() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
+  final roles = ['farmer', 'buyer', 'ngo', 'admin'];
 
-    try {
-      final response = await supabase.auth.signUp(
-        email: emailController.text,
-        password: passwordController.text,
+  Future<void> _signup() async {
+    setState(() => _isLoading = true);
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    final response = await Supabase.instance.client.auth.signUp(
+      email: email,
+      password: password,
+    );
+
+    final user = response.user;
+    if (user != null) {
+      // Add to UserProfiles
+      await Supabase.instance.client.from('UserProfiles').insert({
+        'id': user.id,
+        'email': email,
+        'role': _selectedRole,
+      });
+      // Navigate to login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
-
-      if (response.user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } on AuthException catch (e) {
-      setState(() => error = e.message);
-    } finally {
-      setState(() => isLoading = false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signup failed.')),
+      );
     }
+
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up")),
+      appBar: AppBar(title: const Text('Sign Up')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            if (error != null)
-              Text(error!, style: const TextStyle(color: Colors.red)),
             TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: "Email")),
-            TextField(
-                controller: passwordController,
-                decoration: const InputDecoration(labelText: "Password"),
-                obscureText: true),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: isLoading ? null : signup,
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text("Sign Up"),
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              onChanged: (value) => setState(() => _selectedRole = value!),
+              items: roles.map((role) {
+                return DropdownMenuItem(
+                  value: role,
+                  child: Text(role.toUpperCase()),
+                );
+              }).toList(),
+              decoration: const InputDecoration(labelText: 'Select Role'),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _signup,
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Sign Up'),
+            ),
+            const SizedBox(height: 12),
             TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/login'),
-              child: const Text("Already have an account? Login"),
-            )
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+              child: const Text('Already have an account? Log in'),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
