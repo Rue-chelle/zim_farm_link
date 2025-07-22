@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/custom_button.dart';
-import '../../widgets/custom_textfield.dart';
-import '../navigation/main_navigation_wrapper.dart';
+import '../../widgets/auth_form_field.dart';
+import '../../navigation/main_navigation_wrapper.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -61,7 +61,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/logo.png', height: 100),
                 const SizedBox(height: 24),
                 const Text(
                   'Welcome Back to ZimFarmLink',
@@ -73,13 +72,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
+                AuthFormField(
                   label: 'Email',
                   controller: emailController,
                   icon: Icons.email,
                 ),
                 const SizedBox(height: 12),
-                CustomTextField(
+                AuthFormField(
                   label: 'Password',
                   controller: passwordController,
                   icon: Icons.lock,
@@ -97,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const SignupScreen()),
+                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
                     );
                   },
                   child: const Text(

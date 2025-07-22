@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'get_started_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -28,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Lottie.asset('assets/animations/farm_loading.json', height: 200),
+          // Lottie.asset('assets/animations/farm_loading.json', height: 200),
           const SizedBox(height: 20),
           const Text('ZimFarmLink',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
