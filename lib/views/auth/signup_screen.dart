@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -12,42 +11,50 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String _selectedRole = 'farmer'; // default role
-  bool _isLoading = false;
+  final _fullNameController = TextEditingController();
 
-  final roles = ['farmer', 'buyer', 'ngo', 'admin'];
+  bool _isLoading = false;
 
   Future<void> _signup() async {
     setState(() => _isLoading = true);
-
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final fullName = _fullNameController.text.trim();
 
-    final response = await Supabase.instance.client.auth.signUp(
-      email: email,
-      password: password,
-    );
-
-    final user = response.user;
-    if (user != null) {
-      // Add to UserProfiles
-      await Supabase.instance.client.from('UserProfiles').insert({
-        'id': user.id,
-        'email': email,
-        'role': _selectedRole,
-      });
-      // Navigate to login
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': fullName},
+        emailRedirectTo: 'https://yourapp.supabase.co/auth/callback', // optional
       );
-    } else {
+
+      if (response.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Confirmation email sent! Please verify.')),
+        );
+
+        // Insert into UserProfiles table
+        await Supabase.instance.client.from('UserProfiles').insert({
+          'id': response.user!.id,
+          'email': email,
+          'full_name': fullName,
+          'role': 'farmer', // default or allow selection
+        });
+
+        // Don't navigate yet — wait for confirmation
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signup failed')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signup failed.')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    setState(() => _isLoading = false);
   }
 
   @override
@@ -59,43 +66,24 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           children: [
             TextField(
+              controller: _fullNameController,
+              decoration: const InputDecoration(labelText: 'Full Name'),
+            ),
+            TextField(
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 12),
             TextField(
               controller: _passwordController,
               obscureText: true,
               decoration: const InputDecoration(labelText: 'Password'),
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _selectedRole,
-              onChanged: (value) => setState(() => _selectedRole = value!),
-              items: roles.map((role) {
-                return DropdownMenuItem(
-                  value: role,
-                  child: Text(role.toUpperCase()),
-                );
-              }).toList(),
-              decoration: const InputDecoration(labelText: 'Select Role'),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isLoading ? null : _signup,
               child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text('Sign Up'),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              child: const Text('Already have an account? Log in'),
             ),
           ],
         ),
@@ -103,4 +91,3 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
-
