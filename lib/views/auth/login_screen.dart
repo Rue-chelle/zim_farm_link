@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../navigation/main_navigation_wrapper.dart';
+import '../../utils/theme.dart';
+import '../../widgets/auth_form_field.dart';
+import '../navigation/main_navigation_wrapper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,60 +14,79 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
   bool _isLoading = false;
 
   Future<void> _login() async {
     setState(() => _isLoading = true);
+
     try {
-      final response = await Supabase.instance.client.auth.signInWithPassword(
+      final res = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      if (response.user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful!')),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainNavigationWrapper()),
-        );
+      if (res.user != null) {
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainNavigationWrapper()),
+          );
+        }
       }
-    } catch (e) {
+    } on AuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: ${e.toString()}')),
+        SnackBar(content: Text(e.message)),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  void _goToSignup() {
+    Navigator.pushNamed(context, '/signup');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _login,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Login'),
-            ),
-          ],
+      backgroundColor: AppColors.bgColor,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Welcome Back 👋',
+                  style: Theme.of(context).textTheme.headlineLarge),
+              const SizedBox(height: 12),
+              Text('Login to your ZimFarmLink account',
+                  style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 32),
+              AuthFormField(
+                controller: _emailController,
+                label: 'Email',
+                icon: Icons.email,
+              ),
+              const SizedBox(height: 16),
+              AuthFormField(
+                controller: _passwordController,
+                label: 'Password',
+                icon: Icons.lock,
+                isPassword: true,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _login,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Login'),
+              ),
+              TextButton(
+                onPressed: _goToSignup,
+                child: const Text("Don't have an account? Sign up"),
+              )
+            ],
+          ),
         ),
       ),
     );
