@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import './views/auth/auth_gate.dart';
+import './views/auth/login_screen.dart';
+import './views/navigation/main_navigation_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
+
     return MaterialApp(
       title: 'ZimFarmLink',
       theme: ThemeData(
@@ -25,7 +28,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
       ),
       debugShowCheckedModeBanner: false,
-      home: const AuthGate(),
+      home: isLoggedIn ? const MainNavigationWrapper() : const LoginScreen(),
     );
   }
 }
