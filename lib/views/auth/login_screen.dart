@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../widgets/custom_button.dart';
-import '../../widgets/auth_form_field.dart';
-import '../../navigation/main_navigation_wrapper.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'signup_screen.dart';
+import '../../services/user_role_service.dart';
+import '../navigation/farmer_nav.dart';
+import '../navigation/buyer_nav.dart';
+import '../navigation/ngo_nav.dart';
+import '../navigation/admin_nav.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,99 +16,155 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _loading = false;
+  final supabase = Supabase.instance.client;
 
-  Future<void> _signIn() async {
+  Future<void> _login() async {
     setState(() => _loading = true);
 
     try {
-      final AuthResponse res = await Supabase.instance.client.auth.signInWithPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+      final response = await supabase.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
 
-      if (res.user != null) {
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainNavigationWrapper()),
-        );
-      } else {
-        _showMessage("Invalid email or password.");
+      if (response.user != null) {
+        final role = await UserRoleService.getUserRole(response.user!.id);
+        switch (role) {
+          case 'farmer':
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FarmerNav()));
+            break;
+          case 'buyer':
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BuyerNav()));
+            break;
+          case 'ngo':
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const NGONav()));
+            break;
+          case 'admin':
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminNav()));
+            break;
+          default:
+            _showError('Unknown role');
+        }
       }
-    } on AuthException catch (error) {
-      _showMessage(error.message);
     } catch (e) {
-      _showMessage("An unexpected error occurred.");
-    } finally {
-      setState(() => _loading = false);
+      _showError('Login failed. Please check your credentials.');
     }
+
+    setState(() => _loading = false);
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _loginWithProvider(Provider provider) async {
+    await supabase.auth.signInWithOAuth(provider);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green.shade50,
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 24),
-                const Text(
-                  'Welcome Back to ZimFarmLink',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ListView(
+            children: [
+              const SizedBox(height: 40),
+              Center(
+                child: Column(
+                  children: [
+                    Image.asset('assets/images/logo.png', height: 100),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Welcome to ZimFarmLink',
+                      style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Log in to connect, farm, and grow.',
+                      style: GoogleFonts.poppins(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _loading ? null : _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _loading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text('Login', style: GoogleFonts.poppins(fontSize: 16)),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen()));
+                },
+                child: Text("Don't have an account? Sign up", style: GoogleFonts.poppins()),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text('or', style: GoogleFonts.poppins()),
                   ),
-                  textAlign: TextAlign.center,
+                  const Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => _loginWithProvider(Provider.google),
+                icon: Image.asset('assets/icons/google.png', height: 20),
+                label: Text('Continue with Google', style: GoogleFonts.poppins()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.grey),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                const SizedBox(height: 16),
-                AuthFormField(
-                  label: 'Email',
-                  controller: emailController,
-                  icon: Icons.email,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => _loginWithProvider(Provider.facebook),
+                icon: Image.asset('assets/icons/facebook.png', height: 20),
+                label: Text('Continue with Facebook', style: GoogleFonts.poppins()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.grey),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                const SizedBox(height: 12),
-                AuthFormField(
-                  label: 'Password',
-                  controller: passwordController,
-                  icon: Icons.lock,
-                  isPassword: true,
-                ),
-                const SizedBox(height: 20),
-                _loading
-                    ? const CircularProgressIndicator()
-                    : CustomButton(
-                        text: 'Login',
-                        onTap: _signIn,
-                      ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Don't have an account? Sign Up",
-                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
