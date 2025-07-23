@@ -34,4 +34,7 @@ flutter:
   assets:
 
    - assets/images/farming_logo.png
-  
+   - assets/icons/google.png
+   - assets/icons/facebook.png
+   - assets/images/logo.png
+
