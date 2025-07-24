@@ -1,140 +1,189 @@
 import 'package:flutter/material.dart';
-// import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_screen.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _fullNameController = TextEditingController();
-  bool _loading = false;
+class _SignupScreenState extends State<SignupScreen> {
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
-  void _showMessage(String message, [bool success = false]) {
-    final color = success ? Colors.green : Colors.red;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color),
-    );
-  }
+  String _selectedRole = 'farmer';
+  bool _obscurePassword = true;
+  bool _isLoading = false;
 
-  Future<void> _signUp() async {
-    setState(() => _loading = true);
+  final List<String> _roles = ['farmer', 'buyer', 'ngo'];
+
+  Future<void> _signup() async {
+    setState(() => _isLoading = true);
 
     try {
-      final response = await Supabase.instance.client.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      final auth = Supabase.instance.client.auth;
+
+      final response = await auth.signUp(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
 
       final user = response.user;
+
       if (user != null) {
-        // Optional: Insert into a user_profiles table
         await Supabase.instance.client.from('UserProfiles').insert({
           'id': user.id,
-          'full_name': _fullNameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'role': 'farmer', // default role
+          'full_name': fullNameController.text.trim(),
+          'role': _selectedRole,
         });
 
-        _showMessage("Account created! Please log in.", true);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Check your email to confirm your account.'),
+          ),
         );
-      } else {
-        _showMessage("Sign up failed.");
+        Navigator.pop(context);
       }
-    } catch (e) {
-      _showMessage("Error: ${e.toString()}");
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
+  }
 
-    setState(() => _loading = false);
+  void _togglePassword() {
+    setState(() => _obscurePassword = !_obscurePassword);
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    await Supabase.instance.client.auth.signInWithOAuth(Provider.google);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-        child: Column(
-          children: [
-            
-            const SizedBox(height: 16),
-            const Text(
-              'Create your ZimFarmLink account',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _fullNameController,
-              decoration: InputDecoration(
-                labelText: 'Full Name',
-                prefixIcon: const Icon(Icons.person),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                prefixIcon: const Icon(Icons.email),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                prefixIcon: const Icon(Icons.lock),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _signUp,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+      backgroundColor: Colors.green.shade50,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 32),
+                const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
                 ),
-                child: _loading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Sign Up', style: TextStyle(fontSize: 16)),
-              ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Sign up to get started',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                const SizedBox(height: 32),
+
+                TextField(
+                  controller: fullNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                          _obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      onPressed: _togglePassword,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                DropdownButtonFormField(
+                  value: _selectedRole,
+                  decoration: const InputDecoration(
+                    labelText: 'Registering as',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _roles.map((role) {
+                    return DropdownMenuItem(
+                      value: role,
+                      child: Text(role[0].toUpperCase() + role.substring(1)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedRole = value!);
+                  },
+                ),
+
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _signup,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Sign Up'),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                const Text('or'),
+                const SizedBox(height: 16),
+
+                OutlinedButton.icon(
+                  onPressed: _signUpWithGoogle,
+                  icon: const Icon(Icons.login),
+                  label: const Text('Sign up with Google'),
+                ),
+
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  },
+                  child: const Text('Already have an account? Log in'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              child: const Text('Already have an account? Log in'),
-            ),
-          ],
+          ),
         ),
       ),
     );
