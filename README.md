@@ -4,95 +4,243 @@
 ![Flutter](https://img.shields.io/badge/built%20with-Flutter-blue)
 > ⚠️ **Note:** This project is currently under active development. Some features may be incomplete or subject to change.
 
-**ZimFarmLink** is a mobile application built with **Flutter** to empower Zimbabwean farmers and agribusinesses. It connects producers, buyers, and experts through a smart agricultural platform that works both **online and offline**.
+**ZimFarmLink** is a smart farming coordination platform designed to solve food shortages in Zimbabwe through modern digital agriculture. The app connects farmers, buyers, NGOs, and government to promote effective, region-based planting, donations, and marketplace access.
+
+> **🌱 Powered by Alora Innovations**
 
 ---
 
-## 🚀 Features
+## 🚀 MVP Features (Live Now)
 
-- 🛒 **Marketplace**  
-  Buy and sell crops, livestock, and farming equipment locally.
-
-- 🤖 **AI Assistant**  
-  Diagnose plant diseases by uploading a photo, get smart planting recommendations (coming soon).
-
-- 👥 **Community**  
-  Engage with other farmers, share tips, and stay informed.
-
-- 📋 **Profile & Listings**  
-  Manage your listings and edit your personal farmer profile.
-
-- 📶 **Offline Support**  
-  Browse saved content and add listings offline (syncs when online).
-
+- 🌽 **Marketplace**: Farmers list crops/livestock with images, price, and location.
+- 🎁 **Donations**: NGOs or individuals donate crops/livestock; farmers can claim them.
+- 💡 **Smart Assistant**: Get AI-generated planting tips based on soil, region, and weather.
+- 📷 **AI Plant Diagnosis** *(coming in MVP+)*: Snap a plant photo and get disease analysis.
+- 👥 **User Roles**: Support for Farmer, NGO, Buyer, and Admin roles.
+- 🔐 **Authentication**: Secure login/signup via Supabase.
+- 🧑‍🌾 **My Listings**: View and manage your own listings.
+- 🌐 **Web & Mobile Support**: Built with Flutter as a PWA and deployed on Netlify.
+- 🧭 **Navigation**: Intuitive Bottom Navigation Bar with modern animations and theme.
+- 🖼️ **Modern Green UI**: Smooth, agriculture-themed design with transitions and animations.
 
 ---
 
-## 🛠️ Tech Stack
+## 🧪 Upcoming Features (Post-MVP)
 
-- **Frontend**: Flutter & Dart  
-- **State Management**: `setState` (MVP), future: Riverpod or Bloc  
-- **Backend**: Supabase / Firebase (future integration)  
-- **Image Handling**: image_picker  
-- **Offline DB**: `sqflite` (optional)
+These features are actively under development for ZimFarmLink's next release:
+
+### 🌍 Localization & Language Support
+- Support for Shona, Ndebele, and other local languages
+- Smart text direction and offline translations
+
+### 🚚 Logistics & Delivery
+- Location-based listings (view nearby farmers)
+- Delivery coordination and tracking
+- Status indicators (In Progress, Delivered)
+
+### 🌱 Smart Agriculture Enhancements
+- AI crop suggestions based on national demand
+- Smart irrigation & seasonal planning guides
+- Region-specific planting calendars
+
+### 📡 Offline Support Enhancements
+- Fully functional local database using **Drift (SQLite)**
+- Sync when reconnected to internet
+- Offline listing creation and donation claiming
+
+### 🗨️ Chat & Forums
+- Basic messaging between farmers and buyers
+- Community Q&A for farming discussions
+
+### 📊 Dashboards & Insights
+- Admin + NGO dashboards with charts
+- Crop distribution heatmaps
+- Donation impact reporting
+
+### 💸 Mobile Payments & Revenue Tracking
+- EcoCash & USD mobile payment integrations
+- Farmer revenue logs
+- Transaction history view
+
+### 🔔 Notifications & Reminders
+- Push notifications (e.g. donation available)
+- Smart task reminders (e.g. watering/fertilizing)
 
 ---
 
-## 📦 Installation
+## 📸 Screenshots
+
+| Splash Screen | Marketplace | Donations |
+|-------------------------------------|----------------------------------------|----------------------------------------|
+| ![splash](screenshots/splash.png) | ![market](screenshots/market.png) | ![donations](screenshots/donations.png)|
+
+---
+
+## 💻 Getting Started Locally
 
 ```bash
-# 1. Clone the repo
+# Clone the repo
 git clone https://github.com/your-username/zimfarmlink.git
 cd zimfarmlink
 
-# 2. Install dependencies
+# Install dependencies
 flutter pub get
 
-# 3. Run the app
-flutter run
+# Run on Web
+flutter run -d chrome
+
+# Build for Web (Netlify)
+flutter build web
 ```
-## 🧪 Development Notes
 
-- Uses image_picker to upload listing or plant images.
+---
 
-- UI follows a clean, modern aesthetic with consistent color and spacing.
+## 🧭 Navigation Flow
 
--  Navigation is handled via named routes (/addListing, etc).
+2. **AuthGate** → Login / Signup 
+3. **MainNavBar**
+- Marketplace
+- Add Listing
+- Donations
+- AI Assistant
+- Profile
 
-- Works well on both Android and iOS.
+---
 
-## 📂 Project Structure (Simplified)
+## 🧑‍🎓 How It Works
+
+### 👨‍🌾 Farmer
+- View smart planting tips
+- List items for sale
+- Receive donation help
+-Post excess produce as donation
+
+### 🛒 Buyer
+- Browse listings
+- Contact farmers
+
+### 🏢 NGO
+- Received or claim
+- View impact
+
+### 🧑‍💼 Admin
+- Monitor usage and coordinate aid
+
+---
+## ⚙️ Tech Stack
+
+- Flutter (Web + Mobile)
+
+- Supabase (Auth + Realtime DB)
+
+- Drift (SQLite) (Offline support)
+
+- OpenAI API (AI Assistant)
+
+- Netlify (Deployment)
+
+
+
+---
+
+## 📁 Folder Structure
 ```
 lib/
 ├── main.dart
-├── app_routes.dart
 ├── views/
-│   ├── auth/               # Login and Register screens
-│   ├── home/               # Home with bottom navigation
-│   ├── marketplace/        # Marketplace & Add Listing
-│   ├── assistant/          # AI assistant feature
-│   ├── community/          # Community discussions (placeholder)
-│   └── profile/            # User profile and settings
-├── widgets/                # Reusable UI components
-└── models/                 # Data models (future)
+│ ├── splash/
+│ ├── auth/
+│ ├── marketplace/
+│ ├── donations/
+│ ├── profile/
+│ └── smart_assistant/
+├── models/
+├── services/
+├── widgets/
+├── database/
 ```
+
+---
+## 🌍 Deployment (Netlify)
+
+- flutter build web
+
+- Output is in /build/web
+
+- Deploy to Netlify by dragging this folder into your Netlify dashboard
+
+- Or link it with GitHub for CI/CD
+---
+
+## 📑 Supabase Setup
+
+- 1. Create a Supabase project at supabase.com.
+
+
+- 2. Add a UserProfiles table:
+
+create table UserProfiles (
+id uuid primary key references auth.users(id),
+role text
+);
+
+
+- 3. Enable Email Auth and copy:
+
+**anonKey**
+
+**projectUrl**
+
+
+
+- 4. Add keys to main.dart:
+```
+await Supabase.initialize(
+url: 'your_project_url',
+anonKey: 'your_anon_key',
+);
+```
+
+
+
+---
+
+## 🧪 Development Notes
+
+- Uses image_picker for file input.
+
+- Styled using GoogleFonts and a custom theme.
+
+- Auth flow supports role-based navigation: farmer, buyer, NGO, admin.
+
+- Modern, clean UI with onboarding and animations.
+
+---
+
 ## 🧑‍💻 Contributing
 
-Got a feature in mind? Found a bug? Fork the repo and open a pull request!
+Pull requests are welcome ; On current features implemented or upcoming ones stated. Here is how:
 
-  - 🍴 Fork it
+### Fork & clone
+git clone https://github.com/Rue-chelle/zim_farm_link.git
 
-- 👯 Clone it
+### Create feature branch
+git checkout -b feature/amazing-feature
 
-- 🔧 Create your feature branch (git checkout -b feature/AmazingFeature)
+### Commit changes
+git commit -m "Add amazing feature"
 
-- 🧪 Commit your changes (git commit -m 'Add some AmazingFeature')
+### Push
+git push origin feature/amazing-feature
 
-- 🚀 Push to the branch (git push origin feature/AmazingFeature)
+### Open PR
 
-- 📝 Open a Pull Request
+---
 
+📬 Contact & Credits
 
-## 🌍 Built With ❤️ in Zimbabwe by Michelle "Alora" Samuriwo
+Built by Michelle Rufaro Samuriwo
 
+📧 For feedback: [misshie21@gmail.com]
+🌐 Visit: zimfarmlink.netlify.app
 
