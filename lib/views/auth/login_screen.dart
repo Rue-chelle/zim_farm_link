@@ -134,15 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-              const Text('or'),
-              const SizedBox(height: 16),
-
-              OutlinedButton.icon(
-                onPressed: _signInWithGoogle,
-                icon: const Icon(Icons.login),
-                label: const Text('Continue with Google'),
-              ),
 
               const SizedBox(height: 20),
               TextButton(

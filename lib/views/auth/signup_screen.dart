@@ -161,15 +161,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
-                const Text('or'),
-                const SizedBox(height: 16),
+                
 
-                OutlinedButton.icon(
-                  onPressed: _signUpWithGoogle,
-                  icon: const Icon(Icons.login),
-                  label: const Text('Sign up with Google'),
-                ),
 
                 const SizedBox(height: 20),
                 TextButton(
