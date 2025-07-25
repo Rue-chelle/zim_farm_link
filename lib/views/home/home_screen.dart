@@ -44,12 +44,13 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
-          'ZimFarmLink',
+          'Zim Farm Link',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.green[700],
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

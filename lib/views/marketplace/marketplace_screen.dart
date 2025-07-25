@@ -62,6 +62,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         title: const Text('Marketplace',
             style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.green.shade700,
+        foregroundColor: Colors.white,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -34,8 +34,9 @@ class _SignupScreenState extends State<SignupScreen> {
       final user = response.user;
 
       if (user != null) {
-        await Supabase.instance.client.from('UserProfiles').insert({
-          'id': user.id,
+        // ✅ Insert user profile using uuid (not id)
+        await Supabase.instance.client.from('user_profiles').insert({
+          'uuid': user.id, // 🔑 Matches Supabase auth
           'full_name': fullNameController.text.trim(),
           'role': _selectedRole,
         });
@@ -45,6 +46,7 @@ class _SignupScreenState extends State<SignupScreen> {
             content: Text('Check your email to confirm your account.'),
           ),
         );
+
         Navigator.pop(context);
       }
     } on AuthException catch (e) {
@@ -119,7 +121,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off),
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
                       onPressed: _togglePassword,
                     ),
                   ),
@@ -162,7 +167,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
 
                 
-
 
                 const SizedBox(height: 20),
                 TextButton(
