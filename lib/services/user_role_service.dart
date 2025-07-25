@@ -5,7 +5,7 @@ class UserRoleService {
     final response = await Supabase.instance.client
         .from('UserProfiles')
         .select('role')
-        .eq('id', userId)
+        .eq('uuid', userId)
         .single();
 
     return response['role'] as String;
