@@ -70,9 +70,13 @@ These features are actively under development for ZimFarmLink's next release:
 
 ## 📸 Screenshots
 
-| Splash Screen | Marketplace | Donations |
-|-------------------------------------|----------------------------------------|----------------------------------------|
-| ![splash](screenshots/splash.png) | ![market](screenshots/market.png) | ![donations](screenshots/donations.png)|
+| Splash Screen | Get started | login screen| sign up | 
+|-------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|
+| ![splash](screenshots/splash.jpg) | ![](screenshots/get.jpg) | ![](screenshots/log.jpg)| ![](screenshots/sign.jpg)|
+
+| Home screen | Donations | Marketplace | Smart Assistant | 
+|-------------------------------------|----------------------------------------|----------------------------------------|----------------------------------------|
+| ![](screenshots/home.jpg) | ![](screenshots/donate.jpg) | ![donations](screenshots/market.jpg)| ![](screenshots/assist.jpg)|
 
 ---
 
@@ -80,7 +84,7 @@ These features are actively under development for ZimFarmLink's next release:
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/zimfarmlink.git
+git clone https://github.com/Rue-chelle/zimfarmlink.git
 cd zimfarmlink
 
 # Install dependencies
@@ -237,10 +241,10 @@ git push origin feature/amazing-feature
 
 ---
 
-📬 Contact & Credits
+### 📬 Contact & Credits
 
-Built by Michelle Rufaro Samuriwo
+- **Built by Michelle Rufaro Samuriwo**
 
-📧 For feedback: [misshie21@gmail.com]
-🌐 Visit: zimfarmlink.netlify.app
+- 📧 For feedback: misshie21@gmail.com
+- 🌐 Visit: https://zimfarmlink.netlify.app
 
